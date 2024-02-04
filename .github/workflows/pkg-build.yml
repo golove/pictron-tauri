@@ -26,10 +26,10 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
         
-      - name: setup npm
-        uses: npm/action-setup@v2
-        with:
-          version: 8
+      # - name: setup npm
+      #   uses: npm/action-setup@v2
+      #   with:
+      #     version: 8
       - name: Sync node version and setup cache
         uses: actions/setup-node@v3
         with:
