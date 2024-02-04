@@ -26,7 +26,7 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
         
-      - name: setup pnpm
+      - name: setup npm
         uses: npm/action-setup@v2
         with:
           version: 8
@@ -38,7 +38,7 @@ jobs:
 
       - name: Install frontend dependencies
         # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
-        run: pnpm install # Change this to npm, yarn or pnpm.
+        run: npm install # Change this to npm, yarn or pnpm.
 
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
