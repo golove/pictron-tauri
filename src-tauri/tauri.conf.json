@@ -54,7 +54,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://releases.myapp.com/{{target}}/{{arch}}/{{current_version}}"
+        "https://github.com/golove/pictron-tauri/releases/download/v0.1.0/latest.json"
       ],
       "dialog": true,
       "windows": {
