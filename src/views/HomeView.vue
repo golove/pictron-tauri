@@ -8,7 +8,7 @@ import TheWelcome from '../components/TheWelcome.vue'
 
 <template>
   <main>
-    <h3>I am v0.1.0</h3>
+    <h3>I am v0.1.1</h3>
     <TheWelcome />
   </main>
 </template>
