@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "pictron-tauri",
-    "version": "0.1.4"
+    "version": "0.1.0"
   },
   "tauri": {
     "allowlist": {
@@ -54,11 +54,11 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/golove/pictron-tauri/releases/download/v0.1.5/latest.json"
+        "https://github.com/golove/pictron-tauri/releases/download/v0.1.1/latest.json"
       ],
       "dialog": true,
       "windows": {
-        "installMode": "passive"
+        "installMode": "basicUi"
       },
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk2NTZDRTNCRkJFRTc0REQKUldUZGRPNzdPODVXbG5Gc08zT3F3SVNFT0U4eVQwd0R2Q21FekJQb3dDaGJndk1VM01VZVA2eTEK"
     },
