@@ -29,18 +29,18 @@ export const findMin = (array: number[]) => {
 
 
 // 防抖
-export const debounce = (fn: Function, delay: number) => {
-  let timer: any = null
-  return function () {
-    if (timer) {
-      clearTimeout(timer)
-    }
-    timer = setTimeout(() => {
-      // eslint-disable-next-line prefer-rest-params
-      fn.apply(this, arguments)
-    }, delay)
-  }
-}
+// export const debounce = (fn: Function, delay: number) => {
+//   let timer: any = null
+//   return function () {
+//     if (timer) {
+//       clearTimeout(timer)
+//     }
+//     timer = setTimeout(() => {
+//       // eslint-disable-next-line prefer-rest-params
+//       fn.apply(this, arguments)
+//     }, delay)
+//   }
+// }
 
 //
 export function useDefer(maxCount: number = 23) {
