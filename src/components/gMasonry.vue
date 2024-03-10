@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted,watch ,watchEffect, h, type VNode } from 'vue'
-import { findMax,findMin } from '@/utils'
+import { ref, onMounted, watch, watchEffect, h, type VNode, isVNode } from 'vue'
+import { findMax, findMin } from '@/utils'
 
 const props = defineProps({
     cols: {
@@ -26,7 +26,7 @@ const slots = defineSlots<{
 
 
 watchEffect(() => {
-   
+
     init()
     setItemStyle(itemWidth.value)
     masonry.value = h('div', { style: { position: 'relative', width: '100%' } }, [...defaultVNode.value])
@@ -47,10 +47,10 @@ onMounted(() => {
         console.log('resize')
         init()
     }
-    watch(masonryRef.value.offsetWidth,(n,o)=>{
-        console.log(n,o)
-    init()
-},{deep:true})
+    watch(masonryRef.value.offsetWidth, (n, o) => {
+        console.log(n, o)
+        init()
+    }, { deep: true })
 })
 
 function setItemStyle(width: number) {
@@ -68,10 +68,10 @@ function setItemStyle(width: number) {
                   --x:${border ? border.x : '0px'};--y:${border ? border.y : '0px'}
                  `
             cols.value[min] += (height + props.gap)
-            if(index===children.value.length-1){
+            if (index === children.value.length - 1) {
                 const max = findMax(cols.value);
-                masonryRef.value.style.height = cols.value[max]+'px'
-            }          
+                masonryRef.value.style.height = cols.value[max] + 'px'
+            }
         }
     }
 }
@@ -99,7 +99,9 @@ function init() {
     itemWidth.value = (masWidth.value - props.gap * (props.cols + 1)) / props.cols
     defaultVNode.value = slots.default && slots.default()
     if (defaultVNode.value && defaultVNode.value[0] && defaultVNode.value[0].children) {
-        children.value = defaultVNode.value[0].children
+
+        children.value = defaultVNode.value[0].children as VNode[]
+
     }
 
 }
