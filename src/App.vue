@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router'
 import { invoke } from '@tauri-apps/api/tauri'
-import { ref } from 'vue'
+import { ref,watch } from 'vue'
 import HomeIcon from './components/icons/IconDocumentation.vue'
 import IconSupport from './components/icons/IconSupport.vue'
 import customizeTitlebar from './components/customizeTitlebar.vue'
 import IconBack from './components/icons/IconBack.vue'
 import IconForward from './components/icons/IconForward.vue'
 import IconSearch from './components/icons/IconSearch.vue'
+import IconClose from './components/icons/IconClose.vue'
+import {useCounterStore} from './stores/counter'
+const {changeSideShowFlag} = useCounterStore()
+const store = useCounterStore()
 
 const data = ref()
 invoke('showName', { name: 'World' })
@@ -31,21 +35,39 @@ const links = [{
   icon: IconSupport
 }
 ]
-const sideFlag = ref(true)
+
+
+
+
 const sideWidth = ref(150)
 const marginToolbarButton = ref(0)
-function showSide() {
-  sideFlag.value = !sideFlag.value
-  sideWidth.value = sideFlag.value ? 150 : 0
-  marginToolbarButton.value = sideFlag.value ? 0 : 120
+
+store.setMainWidth(window.innerWidth - sideWidth.value)
+onresize = ()=>{
+ store.setMainWidth(window.innerWidth - sideWidth.value)
+ console.log('window',store.mainWidth)
+}
+
+watch(()=>store.sideShowFlag,(n)=>{
+  console.log(n)
+  sideWidth.value = n?150:0
+  store.setMainWidth(window.innerWidth - sideWidth.value)
+  marginToolbarButton.value = n ? 0 : 120
+})
+
+  
+
+
+const searchText = ref('')
+function clearSearchText(){
+  searchText.value = ''
 }
 </script>
 
 <template>
 
-  <customizeTitlebar @showSide="showSide" />
-
-  <div class="side">
+  <customizeTitlebar @showSide="changeSideShowFlag()" />
+  <div :style="{width:sideWidth + 'px'}" class="side">
 
     <div class="avatar">golove</div>
     <router-link v-for="item in links" :key="item.title" :to="item.to">
@@ -53,11 +75,11 @@ function showSide() {
         <component :is="item.icon" />
       </i>
       <div class="title">{{ item.title }}</div>
-    </router-link> |
+    </router-link>
   </div>
-  <main>
+  <main :style="{width:store.mainWidth + 'px',left:sideWidth + 'px'}">
     <div data-tauri-drag-region class="toolbar">
-      <div data-tauri-drag-region class="toolbarButton">
+      <div data-tauri-drag-region class="toolbarButton" :style="{left: marginToolbarButton + 'px'}">
         <div class="arrowButton">
           <i class="back">
             <IconBack />
@@ -72,7 +94,9 @@ function showSide() {
           <i>
             <IconSearch />
           </i>
-          <input type="text" name="search" id="search" placeholder="search" />
+          <input v-model="searchText" type="text" name="search" id="search" placeholder="search" />
+          <i v-show="searchText" @click="clearSearchText"><IconClose /></i>
+          
         </div>
     </div>
     <div class="content">
@@ -87,7 +111,6 @@ function showSide() {
   position: relative;
   user-select: none;
   height: 100%;
-  width: v-bind(sideWidth + 'px');
   background-color: rgba(225, 225, 225, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
@@ -95,6 +118,7 @@ function showSide() {
 }
 
 .avatar {
+  user-select: none;
   border-radius: 12px 0 0 0;
   position: relative;
   width: inherit;
@@ -129,6 +153,7 @@ i {
 }
 
 svg {
+  user-select: none;
   fill: var(--color-text);
   transition: all 0.3s ease;
 }
@@ -142,16 +167,15 @@ svg {
 
 main {
   height: 100%;
-  width: calc(100% - v-bind(sideWidth + 'px'));
   top: 30px;
   position: absolute;
-  left: v-bind(sideWidth + 'px');
   min-height: 100vh;
   transition: all 0.3s ease;
 }
 
 
 .toolbar {
+  user-select: none;
   height: 30px;
   width: inherit;
   background: rgba(92, 63, 74, 0.31);
@@ -161,15 +185,16 @@ main {
 }
 
 .toolbarButton {
+  user-select: none;
   position: absolute;
   top: 0;
-  left: v-bind(marginToolbarButton + 'px');
   width: inherit;
   height: 70%;
   transition: all 0.3s ease;
 }
 
 .arrowButton {
+  user-select: none;
   position: absolute;
   top: 0;
   align-items: center;
@@ -190,6 +215,7 @@ main {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   display: flex;
+  transition: all 0.3s ease;
 }
 
 input#search {
@@ -209,7 +235,7 @@ input#search {
   overflow-y: scroll;
 }
 .content::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 .content::-webkit-scrollbar-thumb {
   background-color: rgba(151, 151, 151, 0.3);

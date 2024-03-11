@@ -31,6 +31,7 @@ const width = 150
 }
 
 .titlebar-button {
+  user-select: none;
   position: absolute;
   align-items: center;
   width: auto;
@@ -39,12 +40,4 @@ const width = 150
   height: 20px;
   /* background-color: #333; */
 }
-svg{
-    fill: beige;
-    color: aliceblue;
-}
-svg:hover{
-  fill: white;
-}
-
 </style>

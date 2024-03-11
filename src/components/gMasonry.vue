@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, watchEffect, h, type VNode, isVNode } from 'vue'
+import { ref, onMounted, watchEffect, h, type VNode, watch } from 'vue'
 import { findMax, findMin } from '@/utils'
+import { useCounterStore } from '@/stores/counter';
+const store = useCounterStore()
 
 const props = defineProps({
     cols: {
@@ -16,7 +18,6 @@ const defaultVNode = ref<VNode[]>([])
 const children = ref<VNode[]>([]);
 const masonry = ref()
 const masonryRef = ref()
-const masWidth = ref()
 const itemWidth = ref()
 const cols = ref(new Array(props.cols).fill(props.gap))
 const lightBorder = ref<{ x: string, y: string }[]>([])
@@ -26,10 +27,7 @@ const slots = defineSlots<{
 
 
 watchEffect(() => {
-
     init()
-    setItemStyle(itemWidth.value)
-    masonry.value = h('div', { style: { position: 'relative', width: '100%' } }, [...defaultVNode.value])
 });
 
 
@@ -37,20 +35,12 @@ watchEffect(() => {
 
 
 masonry.value = h('div', { class: 'masonry' }, [...defaultVNode.value])
-
+onmousemove = (e: MouseEvent) => {
+    setLightBorder(e)
+}
 onMounted(() => {
     init()
-    onmousemove = (e: MouseEvent) => {
-        setLightBorder(e)
-    }
-    onresize = () => {
-        console.log('resize')
-        init()
-    }
-    watch(masonryRef.value.offsetWidth, (n, o) => {
-        console.log(n, o)
-        init()
-    }, { deep: true })
+
 })
 
 function setItemStyle(width: number) {
@@ -95,14 +85,14 @@ function setLightBorder(e: MouseEvent) {
 function init() {
     if (!masonryRef.value) return
     cols.value = new Array(props.cols).fill(props.gap)
-    masWidth.value = masonryRef.value.offsetWidth
-    itemWidth.value = (masWidth.value - props.gap * (props.cols + 1)) / props.cols
+
+    itemWidth.value = (store.mainWidth - props.gap * (props.cols + 1)) / props.cols
     defaultVNode.value = slots.default && slots.default()
     if (defaultVNode.value && defaultVNode.value[0] && defaultVNode.value[0].children) {
-
         children.value = defaultVNode.value[0].children as VNode[]
-
     }
+    setItemStyle(itemWidth.value)
+    masonry.value = h('div', { style: { position: 'relative', width: '100%' } }, [...defaultVNode.value])
 
 }
 
