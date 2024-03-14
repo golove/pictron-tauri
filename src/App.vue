@@ -9,10 +9,11 @@ import IconBack from './components/icons/IconBack.vue'
 import IconForward from './components/icons/IconForward.vue'
 import IconSearch from './components/icons/IconSearch.vue'
 import IconClose from './components/icons/IconClose.vue'
+import { storeToRefs } from 'pinia';
 import {useCounterStore} from './stores/counter'
 const {changeSideShowFlag} = useCounterStore()
 const store = useCounterStore()
-
+const {mainWidth,sideShowFlag } = storeToRefs(store)
 const data = ref()
 invoke('showName', { name: 'World' })
   // `invoke` 返回异步函数
@@ -45,11 +46,10 @@ const marginToolbarButton = ref(0)
 store.setMainWidth(window.innerWidth - sideWidth.value)
 onresize = ()=>{
  store.setMainWidth(window.innerWidth - sideWidth.value)
- console.log('window',store.mainWidth)
+ console.log('window',mainWidth.value)
 }
 
-watch(()=>store.sideShowFlag,(n)=>{
-  console.log(n)
+watch(()=>sideShowFlag.value,(n)=>{
   sideWidth.value = n?150:0
   store.setMainWidth(window.innerWidth - sideWidth.value)
   marginToolbarButton.value = n ? 0 : 120
@@ -77,7 +77,7 @@ function clearSearchText(){
       <div class="title">{{ item.title }}</div>
     </router-link>
   </div>
-  <main :style="{width:store.mainWidth + 'px',left:sideWidth + 'px'}">
+  <main :style="{width:mainWidth + 'px',left:sideWidth + 'px'}">
     <div data-tauri-drag-region class="toolbar">
       <div data-tauri-drag-region class="toolbarButton" :style="{left: marginToolbarButton + 'px'}">
         <div class="arrowButton">

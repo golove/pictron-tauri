@@ -8,8 +8,27 @@ use tauri::{
  CustomMenuItem, Manager, Menu, MenuItem, Submenu
 };
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+use mouse_position::mouse_position::Mouse;
 
-
+#[derive(serde::Serialize, Default)]
+struct MousePosition {
+    x: i32,
+    y: i32,
+}
+impl MousePosition {
+    fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
+}
+// 全局获取当前的鼠标坐标
+#[tauri::command]
+fn mouse_position() -> Result<MousePosition, String> {
+    let position = Mouse::get_mouse_position();
+    match position {
+        Mouse::Position { x, y } => return Ok(MousePosition::new(x, y)),
+        Mouse::Error => Err("Cannot find mouse position".to_string()),
+    }
+}
 
 // here `"quit".to_string()` defines the menu item id, and the second parameter is the menu item label.
 
@@ -46,7 +65,7 @@ async fn main() {
     Ok(())
 })
     .menu(menu)
-    .invoke_handler(tauri::generate_handler![spider])
+    .invoke_handler(tauri::generate_handler![spider,mouse_position])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
   
