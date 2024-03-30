@@ -30,12 +30,34 @@ fn mouse_position() -> Result<MousePosition, String> {
     }
 }
 
+
+async fn request() -> Result<(), reqwest::Error> {
+    // 目标网页的URL
+    let url = "https://www.baidu.com";
+  
+    // 发送HTTP GET请求
+    let response = reqwest::get(url).await?;
+  
+    // 检查响应的状态码
+    if response.status().is_success() {
+        // 将响应体作为字符串读取
+        let body = response.text().await?;
+        println!("Response body:\n{}", body);
+    } else {
+        println!("Request failed with status: {}", response.status());
+    }
+  
+    Ok(())
+  }
+
 // here `"quit".to_string()` defines the menu item id, and the second parameter is the menu item label.
 
 #[tauri::command]
 fn spider()->String{
 format!("spider successful")
 }
+
+
 
 #[tokio::main] 
 async fn main() {
@@ -74,21 +96,4 @@ async fn main() {
 }
 
 
-// async fn request() -> Result<(), reqwest::Error> {
-//   // 目标网页的URL
-//   let url = "https://www.baidu.com";
 
-//   // 发送HTTP GET请求
-//   let response = reqwest::get(url).await?;
-
-//   // 检查响应的状态码
-//   if response.status().is_success() {
-//       // 将响应体作为字符串读取
-//       let body = response.text().await?;
-//       println!("Response body:\n{}", body);
-//   } else {
-//       println!("Request failed with status: {}", response.status());
-//   }
-
-//   Ok(())
-// }

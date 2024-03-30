@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "pictron-tauri",
-    "version": "0.1.4"
+    "version": "0.1.5"
   },
   "tauri": {
     "allowlist": {
@@ -62,7 +62,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/golove/pictron-tauri/releases/download/v0.1.5/latest.json"
+        "https://github.com/golove/pictron-tauri/releases/download/v0.1.6/latest.json"
       ],
       "dialog": true,
       "windows": {

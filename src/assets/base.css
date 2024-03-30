@@ -10,6 +10,7 @@
   --vt-c-black-mute: #282828;
 
   --vt-c-indigo: #2c3e50;
+  --vt-c-indigo-half: #2c3e507a;
 
   --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
   --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
@@ -20,6 +21,8 @@
   --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
   --vt-c-text-dark-1: var(--vt-c-white);
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --vt-c-text-dark-3: rgba(235, 235, 235, 0.3);
+  --vt-c-text-dark-4: rgba(235, 235, 235, 0.1);
 }
 
 /* semantic color variables for this project */
@@ -33,6 +36,8 @@
 
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
+  --color-text-half: var(--vt-c-indigo-half);
+  --color-text-half2: var(--vt-c-indigo-half);
   --color-svg:var(var(--vt-c-white-soft));
   --section-gap: 160px;
 }
@@ -48,6 +53,8 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+    --color-text-half: var(--vt-c-text-dark-3);
+    --color-text-half2: var(--vt-c-text-dark-4);
     --color-svg:var(--vt-c-white-soft);
   }
 }

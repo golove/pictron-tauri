@@ -26,11 +26,11 @@ const slots = defineSlots<{
     default: () => any[]
 }>();
 
-
+const scrollbarWidth = 6
 const count = ref(0)
 watchEffect(() => {
     count.value += 1
-    itemWidth.value = (mainWidth.value - props.gap * (props.cols + 1)) / props.cols
+    itemWidth.value = (mainWidth.value - props.gap * (props.cols + 1) - scrollbarWidth ) / props.cols
     init()
     masonry.value = h('div', { style: { position: 'relative' } }, [
         children.value.map((e, i) => {
@@ -45,15 +45,15 @@ watchEffect(() => {
                     borderRadius: '10px', '--x': x.value, '--y': y.value
                 }
             })
-            onmousemove = (ev: MouseEvent) => {
-                if (e.el) {
-                    console.log(ev.clientX, ev.clientY)
-                    const rect = e.el.getBoundingClientRect()
-                    x.value = (ev.clientX - rect.left) + 'px'
-                    y.value = (ev.clientY - rect.top) + 'px'
-                    console.log(x.value, y.value)
-                }
-            }
+            // onmousemove = (ev: MouseEvent) => {
+            //     if (e.el) {
+            //         console.log(ev.clientX, ev.clientY)
+            //         const rect = e.el.getBoundingClientRect()
+            //         x.value = (ev.clientX - rect.left) + 'px'
+            //         y.value = (ev.clientY - rect.top) + 'px'
+            //         console.log(x.value, y.value)
+            //     }
+            // }
             cols.value[min] += (height + props.gap)
             if (i === children.value.length - 1) {
                 const max = findMax(cols.value);

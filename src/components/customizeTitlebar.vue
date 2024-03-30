@@ -10,11 +10,14 @@
 
 <script setup lang="ts">
 
+import { computed } from 'vue';
 import IconSidebar from './icons/IconSidebar.vue'
+import { useCounterStore } from '@/stores/counter';
+const store = useCounterStore()
+
+const width = computed(()=>store.sideShowFlag? 150 : 100)
 
 
-
-const width = 150
 
 
 </script>
@@ -36,8 +39,8 @@ const width = 150
   align-items: center;
   width: auto;
   left: 80px;
-  top: 5px;
-  height: 20px;
+  top: 2.5px;
+  height: 25px;
   /* background-color: #333; */
 }
 </style>

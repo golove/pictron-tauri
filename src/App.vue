@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView,useRouter } from 'vue-router'
+
 import { invoke } from '@tauri-apps/api/tauri'
 import { ref,watch } from 'vue'
 import HomeIcon from './components/icons/IconDocumentation.vue'
@@ -15,6 +16,7 @@ const {changeSideShowFlag} = useCounterStore()
 const store = useCounterStore()
 const {mainWidth,sideShowFlag } = storeToRefs(store)
 const data = ref()
+const router = useRouter()
 invoke('showName', { name: 'World' })
   // `invoke` 返回异步函数
   .then((response) => console.log(response))
@@ -43,15 +45,17 @@ const links = [{
 const sideWidth = ref(150)
 const marginToolbarButton = ref(0)
 
-store.setMainWidth(window.innerWidth - sideWidth.value)
+store.setMainWH(window.innerWidth - sideWidth.value,true)
+store.setMainWH(window.innerHeight,false)
 onresize = ()=>{
- store.setMainWidth(window.innerWidth - sideWidth.value)
- console.log('window',mainWidth.value)
+ store.setMainWH(window.innerWidth - sideWidth.value,true)
+ store.setMainWH(window.innerHeight,false)
 }
 
 watch(()=>sideShowFlag.value,(n)=>{
   sideWidth.value = n?150:0
-  store.setMainWidth(window.innerWidth - sideWidth.value)
+  store.setMainWH(window.innerWidth - sideWidth.value,true)
+  
   marginToolbarButton.value = n ? 0 : 120
 })
 
@@ -62,6 +66,14 @@ const searchText = ref('')
 function clearSearchText(){
   searchText.value = ''
 }
+
+
+
+
+
+
+
+
 </script>
 
 <template>
@@ -77,14 +89,16 @@ function clearSearchText(){
       <div class="title">{{ item.title }}</div>
     </router-link>
   </div>
-  <main :style="{width:mainWidth + 'px',left:sideWidth + 'px'}">
+  <main :style="{width:mainWidth + 'px',left:sideWidth + 'px'}"
+   
+  >
     <div data-tauri-drag-region class="toolbar">
       <div data-tauri-drag-region class="toolbarButton" :style="{left: marginToolbarButton + 'px'}">
         <div class="arrowButton">
-          <i class="back">
+          <i class="back" @click="$router.go(-1)">
             <IconBack />
           </i>
-          <i class="forward">
+          <i class="forward" @click="$router.go(1)">
             <IconForward />
           </i>
         </div>
@@ -148,13 +162,20 @@ i {
   place-items: center;
   place-content: center;
   width: 32px;
-  height: 32px;
+  height: 25px;
   color: var(--color-text);
+  fill: var(--color-text);
 }
 
+i:hover {
+
+  background-color: var(--color-text-half2);
+  border-radius: 6px;
+
+}
 svg {
   user-select: none;
-  fill: var(--color-text);
+  fill: inherit;
   transition: all 0.3s ease;
 }
 
@@ -171,6 +192,7 @@ main {
   position: absolute;
   min-height: 100vh;
   transition: all 0.3s ease;
+  background: rgba(92, 63, 74, 0.05);
 }
 
 
@@ -178,7 +200,8 @@ main {
   user-select: none;
   height: 30px;
   width: inherit;
-  background: rgba(92, 63, 74, 0.31);
+  background: rgba(92, 63, 74, 0.15);
+ 
   /* background-color: var(--color-background-soft); */
   position: fixed;
   top: 0;
@@ -187,9 +210,10 @@ main {
 .toolbarButton {
   user-select: none;
   position: absolute;
-  top: 0;
+  margin-left: 4px;
+  top: 2.5px;
   width: inherit;
-  height: 70%;
+  height: 100%;
   transition: all 0.3s ease;
 }
 
@@ -238,12 +262,12 @@ input#search {
   width: 6px;
 }
 .content::-webkit-scrollbar-thumb {
-  background-color: rgba(151, 151, 151, 0.3);
+  background-color: var(--color-text-half);
   border-radius: 3px;
   cursor: pointer;
 }
 
-.content::-webkit-scrollbar-track {
-  background-color: rgba(41, 41, 41, 0.3);
-}
+/* .content::-webkit-scrollbar-track {
+  background-color: var(--color-background);
+} */
 </style>
