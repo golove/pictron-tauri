@@ -18,6 +18,11 @@ const router = createRouter({
       component: () => import('../views/AboutView.vue')
     },
     {
+      path: '/PictureView/:title/',
+      name: 'PictureView',
+      component: () => import('../views/PictureView.vue')
+    },
+    {
       path: '/bigView/:title/:index',
       name: 'BigView',
       component: () => import('../views/BigView/index.vue')

@@ -9,6 +9,8 @@ import customizeTitlebar from './components/customizeTitlebar.vue'
 import IconBack from './components/icons/IconBack.vue'
 import IconForward from './components/icons/IconForward.vue'
 import IconSearch from './components/icons/IconSearch.vue'
+import IconApp from './components/icons/IconApp.vue'
+import IconWindow from './components/icons/IconWindow.vue'
 import IconClose from './components/icons/IconClose.vue'
 import { storeToRefs } from 'pinia';
 import {useCounterStore} from './stores/counter'
@@ -69,10 +71,14 @@ function clearSearchText(){
 
 
 
+function zoomIn() {
+  store.changeCols(1)
+}
 
 
-
-
+watch(()=>store.cols,(n)=>{
+ console.log(n)
+})
 
 </script>
 
@@ -102,7 +108,12 @@ function clearSearchText(){
             <IconForward />
           </i>
         </div>
-
+        <div class="scaleButton">
+          <i class="magnify" @click="store.changeCols(()=>store.cols+1)">
+            <IconApp /></i>
+          <i class="shrink" @click="store.changeCols(()=>store.cols-1)">
+          <IconWindow /></i>
+        </div>
       </div>
       <div class="searchBox">
           <i>
@@ -171,13 +182,16 @@ i:hover {
 
   background-color: var(--color-text-half2);
   border-radius: 6px;
-
+  
 }
-svg {
+i:hover svg {
+  fill:#f88;
+}
+/* svg {
   user-select: none;
   fill: inherit;
   transition: all 0.3s ease;
-}
+} */
 
 
 .title {
@@ -224,9 +238,18 @@ main {
   align-items: center;
   display: flex;
   color: var(--color-text);
-  ;
+  
 }
 
+.scaleButton{
+  user-select: none;
+  position: absolute;
+  top: 0;
+  left: 100px;
+  align-items: center;
+  display: flex;
+  color: var(--color-text);
+}
 
 .searchBox {
   position: absolute;

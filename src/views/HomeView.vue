@@ -1,15 +1,28 @@
 <script setup lang="ts">
 import masonry from '../components/gMasonry.vue'
 import gCard from '../components/gCard.vue'
+import ToolBar from '@/components/ToolKit.vue'
+import rate from '@/components/gRate.vue'
 import { useRouter } from 'vue-router'
-
-const imgs ={title:"Hot 魚子醬紫色連衣裙寫真 (94P)",srcs:[{"src":"https://pic2303e.xyz/i/2024/01/03/10qfemj.jpg","aspect_ratio":1.3333333333333333},{"src":"https://pic2303e.xyz/i/2024/01/03/10qhd0q.jpg","aspect_ratio":0.7547169811320755},{"src":"https://pic2303e.xyz/i/2024/01/03/10qhrgf.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qg8ef.jpg","aspect_ratio":0.7547169811320755},{"src":"https://pic2303e.xyz/i/2024/01/03/10qfnm6.jpg","aspect_ratio":0.7843137254901961},{"src":"https://pic2303e.xyz/i/2024/01/03/10qfuyb.jpg","aspect_ratio":0.8163265306122449},{"src":"https://pic2303e.xyz/i/2024/01/03/10qjy7y.jpg","aspect_ratio":0.7339449541284404},{"src":"https://pic2303e.xyz/i/2024/01/03/10qgnf2.jpg","aspect_ratio":0.7339449541284404},{"src":"https://pic2303e.xyz/i/2024/01/03/10qhg17.jpg","aspect_ratio":0.684931506849315},{"src":"https://pic2303e.xyz/i/2024/01/03/10qjcs6.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qn5wh.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qo0rj.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qgwr2.jpg","aspect_ratio":0.7339449541284404},{"src":"https://pic2303e.xyz/i/2024/01/03/10qm34b.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qlh9o.jpg","aspect_ratio":0.7619047619047619},{"src":"https://pic2303e.xyz/i/2024/01/03/10qmgbo.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qippa.jpg","aspect_ratio":0.7272727272727273},{"src":"https://pic2303e.xyz/i/2024/01/03/10qghm3.jpg","aspect_ratio":0.6956521739130435},{"src":"https://pic2303e.xyz/i/2024/01/03/10qkunv.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qjl1s.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qi9ic.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qlmiq.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qmtdd.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qhadr.jpg","aspect_ratio":0.7142857142857143},{"src":"https://pic2303e.xyz/i/2024/01/03/10ql5s4.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qiutq.jpg","aspect_ratio":0.6956521739130435},{"src":"https://pic2303e.xyz/i/2024/01/03/10qmxzo.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qicvt.jpg","aspect_ratio":0.6666666666666666},{"src":"https://pic2303e.xyz/i/2024/01/03/10qg3mx.jpg","aspect_ratio":0.7079646017699115}]
-} 
-
-
+import { storeToRefs } from 'pinia';
+import { useCounterStore } from '@/stores/counter';
+const store = useCounterStore()
+const { cols, pictures } = storeToRefs(store)
 const router = useRouter()
-function click(title: string, n: number) {
-  router.push(`/bigView/${title}/${n}`)
+function click(title: string,n: number) {
+    store.setPhotos(n)
+  router.push(`/PictureView/${title}`)
+}
+
+function updateModelValue(obj:{id:string,value:number}) {
+    store.updatePictures({_id:obj.id,fieldsToUpdate:{star:obj.value}})
+}
+
+function update(obj:{type:'collect'|'delete',id:string,value:boolean}){
+  store.updatePictures({_id:obj.id,fieldsToUpdate:{[obj.type]:obj.value}})
+  if(obj.type==='delete'){
+    store.changePictures(obj.id)
+  }
 }
 
 </script>
@@ -20,9 +33,16 @@ function click(title: string, n: number) {
         <card v-for="img in imgs" :key="img.src" :img="img"  />
     </div> -->
 
-    <masonry :cols="3" :gap="10">
-        <gCard v-for="(img,i) in imgs.srcs" :aspectRatio="img.aspect_ratio" :key="img.src"
-         :src="img.src" :width="230" absolute @click="click(imgs.title, i)" />
+    <masonry :cols="cols" :gap="10">
+        <gCard v-for="(img,i) in pictures" :aspectRatio="img.srcs[0].aspect_ratio" :key="img._id"
+         :src="img.srcs[0].src" :title="img.title" :width="230" absolute @click="click(img.title,i)" >
+         <template #header>{{ img.title }} </template>
+        <template #toolkit>
+          <rate :id="img._id" :size="16" :value="img.star" @update="updateModelValue" />
+          <ToolBar :id="img._id" :like="img.collect" :download="img.download" 
+           @update="update" :length="img.srcs.length" />  
+        </template>
+        </gCard>
     </masonry>
     
 

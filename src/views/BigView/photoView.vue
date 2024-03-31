@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch, watchEffect, computed } from 'vue'
 import { images } from '@/utils'
+import { useRoute, useRouter } from 'vue-router'
 import ChevronRight from '@/components/icons/ChevronRight.vue'
 import ChevronLeft from '@/components/icons/ChevronLeft.vue'
 import { storeToRefs } from 'pinia';
@@ -9,7 +10,9 @@ const smallPhotoContainer = ref<HTMLElement>()
 const smallPhoto = ref<HTMLElement>()
 const bigContainer = ref<HTMLElement>()
 const bigPhoto = ref<HTMLElement>()
-const currentIndex = ref(1)
+const route = useRoute()
+const router = useRouter()
+const currentIndex = ref(route.params.index? +route.params.index +1 : 1)
 const store = useCounterStore()
 const { mainWidth, mainHeight, sideShowFlag } = storeToRefs(store)
 const props = defineProps<{
@@ -18,6 +21,13 @@ const props = defineProps<{
         aspect_ratio: number
     }[]
 }>()
+
+
+// 如果图片数据为空，则返回上一页
+if (!props.photos) {
+    router.go(-1)
+}
+
 
 // 控制全屏显示
 const fullScreenFlag = ref(false)
@@ -111,6 +121,12 @@ watch(()=>[mainWidth.value, mainHeight.value,fullScreenFlag.value],()=>{
     init(props.photos, 'smallWidth')
     moveTo(currentIndex.value,false)
 })
+
+// watch(()=>route.params.index, (n) => {
+//     console.log('监听路由变化',n)
+//     smallPhotoClick(() => currentIndex.value = (+n + 1))
+   
+// })
 
 onMounted(() => {
     if (bigContainer.value && smallPhoto.value && bigPhoto.value) {
