@@ -3,14 +3,13 @@
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
 )]
-use std::collections::btree_map::Range;
 
 use tokio;
 use tauri::{
  CustomMenuItem, Manager, Menu, MenuItem, Submenu
 };
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-use mouse_position::mouse_position::Mouse;
+// use mouse_position::mouse_position::Mouse;
 
 #[derive(serde::Serialize, Default)]
 struct MousePosition {
@@ -23,42 +22,41 @@ impl MousePosition {
     }
 }
 // 全局获取当前的鼠标坐标
-#[tauri::command]
-fn mouse_position() -> Result<MousePosition, String> {
-    let position = Mouse::get_mouse_position();
-    match position {
-        Mouse::Position { x, y } => return Ok(MousePosition::new(x, y)),
-        Mouse::Error => Err("Cannot find mouse position".to_string()),
-    }
-}
+// #[tauri::command]
+// fn mouse_position() -> Result<MousePosition, String> {
+//     let position = Mouse::get_mouse_position();
+//     match position {
+//         Mouse::Position { x, y } => return Ok(MousePosition::new(x, y)),
+//         Mouse::Error => Err("Cannot find mouse position".to_string()),
+//     }
+// }
 
 
-async fn request() -> Result<(), reqwest::Error> {
-    // 目标网页的URL
-    let url = "https://www.baidu.com";
+// async fn request() -> Result<(), reqwest::Error> {
+//     // 目标网页的URL
+//     let url = "https://www.baidu.com";
   
-    // 发送HTTP GET请求
-    let response = reqwest::get(url).await?;
+//     // 发送HTTP GET请求
+//     let response = reqwest::get(url).await?;
   
-    // 检查响应的状态码
-    if response.status().is_success() {
-        // 将响应体作为字符串读取
-        let body = response.text().await?;
-        println!("Response body:\n{}", body);
-    } else {
-        println!("Request failed with status: {}", response.status());
-    }
+//     // 检查响应的状态码
+//     if response.status().is_success() {
+//         // 将响应体作为字符串读取
+//         let body = response.text().await?;
+//         println!("Response body:\n{}", body);
+//     } else {
+//         println!("Request failed with status: {}", response.status());
+//     }
   
-    Ok(())
-  }
+//     Ok(())
+//   }
 
-// here `"quit".to_string()` defines the menu item id, and the second parameter is the menu item label.
 
-#[tauri::command]
-fn spider()->i32 {
-    // 模拟爬虫程序
+// #[tauri::command]
+// fn spider()->i32 {
+//     // 模拟爬虫程序
 
-}
+// }
 
 #[tokio::main] 
 async fn main() {
@@ -88,7 +86,7 @@ async fn main() {
     Ok(())
 })
     .menu(menu)
-    .invoke_handler(tauri::generate_handler![spider,mouse_position])
+    // .invoke_handler(tauri::generate_handler![])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
   
