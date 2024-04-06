@@ -256,9 +256,9 @@ main {
   user-select: none;
   height: 30px;
   width: inherit;
-  background: rgba(92, 63, 74, 0.15);
+  /* background: var(--color-background-bar); */
  
-  /* background-color: var(--color-background-soft); */
+  background-color: var(--color-background-soft);
   position: fixed;
   top: 0;
 }

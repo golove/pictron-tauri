@@ -15,7 +15,7 @@ import IconSidebar from './icons/IconSidebar.vue'
 import { useCounterStore } from '@/stores/counter';
 const store = useCounterStore()
 
-const width = computed(()=>store.sideShowFlag? 200 : 100)
+const width = computed(()=>store.sideShowFlag? 200 : 0)
 
 
 
