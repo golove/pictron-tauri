@@ -11,16 +11,16 @@ use tauri::{
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 // use mouse_position::mouse_position::Mouse;
 
-#[derive(serde::Serialize, Default)]
-struct MousePosition {
-    x: i32,
-    y: i32,
-}
-impl MousePosition {
-    fn new(x: i32, y: i32) -> Self {
-        Self { x, y }
-    }
-}
+// #[derive(serde::Serialize, Default)]
+// struct MousePosition {
+//     x: i32,
+//     y: i32,
+// }
+// impl MousePosition {
+//     fn new(x: i32, y: i32) -> Self {
+//         Self { x, y }
+//     }
+// }
 // 全局获取当前的鼠标坐标
 // #[tauri::command]
 // fn mouse_position() -> Result<MousePosition, String> {
