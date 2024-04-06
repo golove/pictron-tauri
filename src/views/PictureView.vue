@@ -3,7 +3,7 @@ import masonry from '../components/gMasonry.vue'
 import gCard from '../components/gCard.vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
-import { useCounterStore }from '@/stores/counter';
+import { useCounterStore }from '../stores/counter';
 const store = useCounterStore()
 const { cols,photos } = storeToRefs(store)
 

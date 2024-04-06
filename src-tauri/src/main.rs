@@ -3,6 +3,8 @@
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
 )]
+use std::collections::btree_map::Range;
+
 use tokio;
 use tauri::{
  CustomMenuItem, Manager, Menu, MenuItem, Submenu
@@ -53,11 +55,10 @@ async fn request() -> Result<(), reqwest::Error> {
 // here `"quit".to_string()` defines the menu item id, and the second parameter is the menu item label.
 
 #[tauri::command]
-fn spider()->String{
-format!("spider successful")
+fn spider()->i32 {
+    // 模拟爬虫程序
+
 }
-
-
 
 #[tokio::main] 
 async fn main() {

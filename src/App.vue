@@ -2,23 +2,24 @@
 import { RouterLink, RouterView,useRouter } from 'vue-router'
 
 import { invoke } from '@tauri-apps/api/tauri'
-import { ref,watch } from 'vue'
-import HomeIcon from './components/icons/IconDocumentation.vue'
+import { computed, ref,watch } from 'vue'
 import IconSupport from './components/icons/IconSupport.vue'
 import customizeTitlebar from './components/customizeTitlebar.vue'
 import IconBack from './components/icons/IconBack.vue'
 import IconForward from './components/icons/IconForward.vue'
 import IconSearch from './components/icons/IconSearch.vue'
 import IconApp from './components/icons/IconApp.vue'
+import IconEcosystem from './components/icons/IconEcosystem.vue'
 import IconWindow from './components/icons/IconWindow.vue'
 import IconClose from './components/icons/IconClose.vue'
+import IconDocumentation from './components/icons/IconDocumentation.vue'
 import { storeToRefs } from 'pinia';
 import {useCounterStore} from './stores/counter'
-const {changeSideShowFlag} = useCounterStore()
+const {changeSideShowFlag,findPictures} = useCounterStore()
 const store = useCounterStore()
 const {mainWidth,sideShowFlag } = storeToRefs(store)
 const data = ref()
-const router = useRouter()
+// const router = useRouter()
 invoke('showName', { name: 'World' })
   // `invoke` 返回异步函数
   .then((response) => console.log(response))
@@ -32,19 +33,24 @@ function click() {
 const links = [{
   to: '/',
   title: 'Home',
-  icon: HomeIcon
+  icon: IconEcosystem
+},
+{
+  to: '/collect',
+  title: 'Collect',
+  icon: IconSupport
 },
 {
   to: '/about',
   title: 'About',
-  icon: IconSupport
+  icon: IconDocumentation
 }
 ]
 
 
 
 
-const sideWidth = ref(150)
+const sideWidth = ref(200)
 const marginToolbarButton = ref(0)
 
 store.setMainWH(window.innerWidth - sideWidth.value,true)
@@ -55,25 +61,27 @@ onresize = ()=>{
 }
 
 watch(()=>sideShowFlag.value,(n)=>{
-  sideWidth.value = n?150:0
+  sideWidth.value = n?200:0
   store.setMainWH(window.innerWidth - sideWidth.value,true)
-  
   marginToolbarButton.value = n ? 0 : 120
 })
 
-  
+const sideMargin = computed(()=>sideShowFlag.value ? "4px 8px" : "0px")
 
 
 const searchText = ref('')
+watch(()=>searchText.value,(n)=>{
+  console.log(searchText.value)
+  findPictures(searchText.value)
+})
 function clearSearchText(){
   searchText.value = ''
+  
 }
 
 
 
-function zoomIn() {
-  store.changeCols(1)
-}
+
 
 
 watch(()=>store.cols,(n)=>{
@@ -87,7 +95,17 @@ watch(()=>store.cols,(n)=>{
   <customizeTitlebar @showSide="changeSideShowFlag()" />
   <div :style="{width:sideWidth + 'px'}" class="side">
 
-    <div class="avatar">golove</div>
+    
+    <div class="searchBox">
+          <i>
+            <IconSearch />
+          </i>
+          <input v-model="searchText" type="text" name="search"
+           id="search" 
+           placeholder="search" />
+          <i v-show="searchText" @click="clearSearchText"><IconClose /></i>
+          
+        </div>
     <router-link v-for="item in links" :key="item.title" :to="item.to">
       <i>
         <component :is="item.icon" />
@@ -112,17 +130,12 @@ watch(()=>store.cols,(n)=>{
           <i class="magnify" @click="store.changeCols(()=>store.cols+1)">
             <IconApp /></i>
           <i class="shrink" @click="store.changeCols(()=>store.cols-1)">
-          <IconWindow /></i>
+          <IconWindow />
+          <!-- <IconDocumentation /> -->
+        </i>
         </div>
       </div>
-      <div class="searchBox">
-          <i>
-            <IconSearch />
-          </i>
-          <input v-model="searchText" type="text" name="search" id="search" placeholder="search" />
-          <i v-show="searchText" @click="clearSearchText"><IconClose /></i>
-          
-        </div>
+    
     </div>
     <div class="content">
       <RouterView />
@@ -135,12 +148,41 @@ watch(()=>store.cols,(n)=>{
 .side {
   position: relative;
   user-select: none;
+  margin-top: 30px;
+  padding:v-bind(sideMargin) ;
   height: 100%;
-  background-color: rgba(225, 225, 225, 0.1);
+  background-color: rgba(135, 135, 135, 0.1);
   overflow: hidden;
   transition: all 0.3s ease;
-  border-radius: 12px 0 0 0;
 }
+
+.searchBox {
+  position: relative;
+  width: 100%;
+  /* top: 30px; */
+  margin: 10px 0;
+  align-items: center;
+  /* border: 1px solid rgba(255, 255, 255, 0.3); */
+  border-radius: 12px;
+  display: flex;
+  transition: all 0.3s ease;
+  background-color: rgba(249, 249, 249, 0.508);
+}
+.searchBox i:nth-child(1){
+  margin-left: 8px;
+}
+
+input#search {
+  width: 90%;
+  border: none;
+  outline: none;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0);
+  padding-left: 2px;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
 
 .avatar {
   user-select: none;
@@ -251,29 +293,6 @@ main {
   color: var(--color-text);
 }
 
-.searchBox {
-  position: absolute;
-  width: 220px;
-  top: 0;
-  right: 10px;
-  height: 20px;
-  top: 5px;
-  align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  display: flex;
-  transition: all 0.3s ease;
-}
-
-input#search {
-  border: none;
-  outline: none;
-  height: 20px;
-  background-color: rgba(0, 0, 0, 0);
-  padding-left: 2px;
-  font-size: 14px;
-  color: var(--color-text);
-}
 
 .content{
   position: absolute;

@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "pictron-tauri",
-    "version": "0.1.5"
+    "version": "0.1.6"
   },
   "tauri": {
     "allowlist": {
@@ -62,7 +62,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/golove/pictron-tauri/releases/download/v0.1.6/latest.json"
+        "https://github.com/golove/pictron-tauri/releases/download/v0.1.7/latest.json"
       ],
       "dialog": true,
       "windows": {
@@ -73,16 +73,16 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 620,
         "resizable": true,
         "title": "pictron",
         "titleBarStyle": "Overlay",
-        "width": 800,
+        "width": 850,
           "hiddenTitle": true,
           "label": "main",
         "transparent": true,
-        "minHeight": 600,
-        "minWidth": 800,
+        "minHeight": 620,
+        "minWidth": 850,
         "acceptFirstMouse": true
       }
     ],
