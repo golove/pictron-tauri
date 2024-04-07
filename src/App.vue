@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink, RouterView,useRouter } from 'vue-router'
+import { RouterLink, RouterView,useRoute } from 'vue-router'
 
 import { invoke } from '@tauri-apps/api/tauri'
 import { computed, ref,watch } from 'vue'
@@ -17,7 +17,7 @@ import { storeToRefs } from 'pinia';
 import {useCounterStore} from './stores/counter'
 const {changeSideShowFlag,findPictures} = useCounterStore()
 const store = useCounterStore()
-const {mainWidth,sideShowFlag } = storeToRefs(store)
+const {mainWidth,sideShowFlag,maxCols,cols,pictureTitle } = storeToRefs(store)
 const data = ref()
 // const router = useRouter()
 invoke('showName', { name: 'World' })
@@ -50,6 +50,7 @@ const links = [{
 
 
 
+
 const sideWidth = ref(200)
 const marginToolbarButton = ref(0)
 
@@ -67,7 +68,7 @@ watch(()=>sideShowFlag.value,(n)=>{
 })
 
 const sideMargin = computed(()=>sideShowFlag.value ? "4px 8px" : "0px")
-
+const toolBarWidth = computed(()=>sideShowFlag.value ?"100%" : "calc(100% - 120px)" )
 
 const searchText = ref('')
 watch(()=>searchText.value,(n)=>{
@@ -79,8 +80,16 @@ function clearSearchText(){
   
 }
 
-
-
+const pictureTitleFlag = ref(false)
+const router = useRoute()
+watch(()=>router.name,(n)=>{
+  console.log(n)
+  if(n === 'PictureView' || n === 'BigView'){
+    pictureTitleFlag.value = true
+  }else{
+    pictureTitleFlag.value = false
+  }
+})
 
 
 
@@ -105,6 +114,7 @@ watch(()=>store.cols,(n)=>{
            placeholder="search" />
           <i v-show="searchText" @click="clearSearchText"><IconClose /></i>
           
+          
         </div>
     <router-link v-for="item in links" :key="item.title" :to="item.to">
       <i>
@@ -126,10 +136,12 @@ watch(()=>store.cols,(n)=>{
             <IconForward />
           </i>
         </div>
+        <div v-show="!pictureTitleFlag" data-tauri-drag-region class="toolbarTitle">{{ $route.name }}</div>
+        <div v-show="pictureTitleFlag" class="pictureTitle">{{ pictureTitle }}</div>
         <div class="scaleButton">
-          <i class="magnify" @click="store.changeCols(()=>store.cols+1)">
+          <i class="magnify" @click="store.changeCols(()=>cols+1)">
             <IconApp /></i>
-          <i class="shrink" @click="store.changeCols(()=>store.cols-1)">
+          <i class="shrink" @click="store.changeCols(()=>cols-1)">
           <IconWindow />
           <!-- <IconDocumentation /> -->
         </i>
@@ -268,7 +280,7 @@ main {
   position: absolute;
   margin-left: 4px;
   top: 2.5px;
-  width: inherit;
+  width: v-bind(toolBarWidth);
   height: 100%;
   transition: all 0.3s ease;
 }
@@ -287,12 +299,23 @@ main {
   user-select: none;
   position: absolute;
   top: 0;
-  left: 100px;
+  right: 20px;
   align-items: center;
   display: flex;
   color: var(--color-text);
 }
-
+.toolbarTitle{
+  user-select: none;
+  position: absolute;
+  left: 80px;
+}
+.pictureTitle{
+  position: absolute;
+  left: 50%;
+  height: inherit;
+  transform: translateX(-50%);
+  overflow: hidden;
+}
 
 .content{
   position: absolute;

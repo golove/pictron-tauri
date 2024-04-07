@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import masonry from '../components/gMasonry.vue'
 import gCard from '../components/gCard.vue'
+import ToolBar from '@/components/ToolKit.vue'
+import rate from '@/components/gRate.vue'
 import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from "../stores/counter";
@@ -8,8 +10,10 @@ const store = useCounterStore()
 const { cols, collect } = storeToRefs(store)
 
 const router = useRouter()
-function click(title: string, n: number) {
-    router.push(`/bigView/${title}/${n}`)
+function click(title: string,n: number) {
+    store.setPhotos(n)
+    store.setPictureTitle(title)
+  router.push(`/PictureView/${title}`)
 }
 
 function updateModelValue(obj:{id:string,value:number}) {

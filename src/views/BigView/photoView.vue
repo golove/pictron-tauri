@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch, watchEffect, computed } from 'vue'
+import { onMounted, reactive, ref, watch, computed } from 'vue'
 import { images } from '@/utils'
 import { useRoute, useRouter } from 'vue-router'
 import ChevronRight from '@/components/icons/ChevronRight.vue'
@@ -282,10 +282,11 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
     width: auto;
     margin: 0 50%;
     transform: translateX(-50%);
-    border-width: 3px;
-    border-style: solid;
-    border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1);
-    border-image-slice: 1;
+    /* border-width: 3px;
+    border-style: solid; */
+    /* border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1); */
+    
+    /* border-image-slice: 1; */
 
 }
 
@@ -298,13 +299,10 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
 .fouceStyle {
     position: absolute;
     height: 100%;
-    border-width: 3px;
-    border-style: solid;
-    border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1);
-    border-image-slice: 1;
+    border:3px solid #ff6b6b;
     z-index: 999;
     transition: all .3s ease-in-out;
-    animation: hueRotate 5s infinite linear;
+    /* animation: hueRotate 5s infinite linear; */
 }
 
 @keyframes hueRotate {

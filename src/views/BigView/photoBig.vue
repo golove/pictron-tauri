@@ -60,17 +60,17 @@ function setWidth(e: { src: string, aspect_ratio: number }, n: number, name: 'bi
 
 
 // 监听路由参数的变化，更新currentIndex
-watchEffect(() => {
-    // currentIndex.value = +route.params.index + 1
-    if (bigContainer.value && smallPhoto.value && bigPhoto.value) {
-        smallPhoto.value.style.height = `${smallPhotoHeight.value}px`
-        bigContainer.value.style.height = `${containerHeight.value}px`
-        bigPhoto.value.style.height = `${containerHeight.value}px`
-    }
-    init(photos, 'bigWidth')
-    init(props.photos, 'smallWidth')
+// watchEffect(() => {
+//     // currentIndex.value = +route.params.index + 1
+//     if (bigContainer.value && smallPhoto.value && bigPhoto.value) {
+//         smallPhoto.value.style.height = `${smallPhotoHeight.value}px`
+//         bigContainer.value.style.height = `${containerHeight.value}px`
+//         bigPhoto.value.style.height = `${containerHeight.value}px`
+//     }
+//     init(photos, 'bigWidth')
+//     init(props.photos, 'smallWidth')
     
-})
+// })
 
 watch(()=>route.params.index, (n) => {
     currentIndex.value = (+n + 1)
@@ -283,7 +283,7 @@ document.addEventListener('keyup', (e: KeyboardEvent) => {
     transform: translateX(-50%);
     border-width: 3px;
     border-style: solid;
-    border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1);
+    /* border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1); */
     border-image-slice: 1;
 
 }
@@ -342,16 +342,16 @@ document.addEventListener('keyup', (e: KeyboardEvent) => {
     height: 100%;
     border-width: 3px;
     border-style: solid;
-    border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1);
+    /* border-image: linear-gradient(to right, #ff6b6b, #ffb677, #fdff94, #d4fc79, #96e6a1); */
     border-image-slice: 1;
     z-index: 999;
     transition: all .3s ease-in-out;
-    animation: hueRotate 5s infinite linear;
+    /* animation: hueRotate 5s infinite linear; */
 }
 
-@keyframes hueRotate {
+/* @keyframes hueRotate {
     100% {
         filter: hue-rotate(360deg)
-    }
-}
+    } 
+} */
 </style>

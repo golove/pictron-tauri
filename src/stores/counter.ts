@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+import { computed, ref,watch } from 'vue'
 import { defineStore } from 'pinia'
 import {data} from './data'
 import type { Picture } from '@/types'
@@ -8,10 +8,20 @@ export const useCounterStore = defineStore('counter', () => {
   const pictures = ref<Picture[]>(data)
   const filterData = ref<Picture[]>([])
   const sideShowFlag = ref(true)
+  const maxCols = computed(() => Math.floor(mainWidth.value / 200))
+  const minCols = computed(() => mainWidth.value<400?1:2)
+  const pictureTitle = ref('')
   const photos = ref<Picture>(data[0])
   const collect = computed<Picture[]>(()=>pictures.value.filter(e=>e.collect))
   function changeCols(cb: (n: number) => number) {
-    cols.value = cb(cols.value)
+    const n = cb(cols.value)
+    if (n >= minCols.value && n <= maxCols.value) {
+      cols.value = n
+    }else if(n < minCols.value){
+      cols.value = minCols.value
+    }else{
+      cols.value = maxCols.value
+    }
   }
   function changeSideShowFlag() {
     sideShowFlag.value = !sideShowFlag.value
@@ -35,6 +45,9 @@ export const useCounterStore = defineStore('counter', () => {
     filterData.value = pictures.value.filter((e: Picture) => e.title.includes(keyword))
   }
 
+  watch(mainWidth,()=>{
+    cols.value = Math.floor(mainWidth.value / 200)
+  })
 
   function changePictures(_id: string) {
     pictures.value = pictures.value.filter((e: Picture) => e._id !== _id)
@@ -50,7 +63,11 @@ export const useCounterStore = defineStore('counter', () => {
     })
   }
 
-  return {sideShowFlag,pictures, cols,  mainWidth,mainHeight,photos,collect,filterData,
-    setMainWH,changeSideShowFlag,setPhotos,changeCols ,findPictures,
+  function setPictureTitle(title: string) {
+    pictureTitle.value = title
+  }
+
+  return {sideShowFlag,pictures, cols,  mainWidth,mainHeight,photos,collect,filterData,maxCols,pictureTitle,
+    setMainWH,changeSideShowFlag,setPhotos,changeCols ,findPictures,setPictureTitle,
     changePictures,updatePictures}
 })

@@ -12,6 +12,7 @@ const { cols, pictures,filterData } = storeToRefs(store)
 const router = useRouter()
 function click(title: string,n: number) {
     store.setPhotos(n)
+    store.setPictureTitle(title)
   router.push(`/PictureView/${title}`)
 }
 
