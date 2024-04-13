@@ -4,6 +4,7 @@ import { images } from '@/utils'
 import { useRoute, useRouter } from 'vue-router'
 import ChevronRight from '@/components/icons/ChevronRight.vue'
 import ChevronLeft from '@/components/icons/ChevronLeft.vue'
+import gImage from "@/components/gImage.vue"
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from '@/stores/counter'
 const smallPhotoContainer = ref<HTMLElement>()
@@ -200,7 +201,9 @@ document.addEventListener('keydown', (e: KeyboardEvent) => {
 
             <div ref="bigPhoto" class="bigPhoto">
                 <div class="img" v-for="(e, i) in photos" :style="widthSet['bigWidth'][i]" :key="e.src">
-                    <img :src="e.src" alt="">
+                    <!-- <div v-if="loading" class="loading" :style="width:mainHeight * e.aspect_ratio">loading...</div>
+                    <img else :src="e.src" alt=""> -->
+                    <gImage :src="e.src" :width="e.aspect_ratio * mainHeight +'px'" />
                 </div>
             </div>
 

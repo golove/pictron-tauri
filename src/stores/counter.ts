@@ -8,8 +8,8 @@ export const useCounterStore = defineStore('counter', () => {
   const pictures = ref<Picture[]>(data)
   const filterData = ref<Picture[]>([])
   const sideShowFlag = ref(true)
-  const maxCols = computed(() => Math.floor(mainWidth.value / 200))
-  const minCols = computed(() => mainWidth.value<400?1:2)
+  const maxCols = computed(() => mainWidth.value / cols.value < 230?cols.value-1:Math.floor(mainWidth.value / 200))
+  const minCols = computed(() => mainWidth.value<400?1:mainWidth.value/cols.value > 350?cols.value+1:1 )
   const pictureTitle = ref('')
   const photos = ref<Picture>(data[0])
   const collect = computed<Picture[]>(()=>pictures.value.filter(e=>e.collect))
@@ -18,7 +18,10 @@ export const useCounterStore = defineStore('counter', () => {
     if (n >= minCols.value && n <= maxCols.value) {
       cols.value = n
     }else if(n < minCols.value){
-      cols.value = minCols.value
+      
+   
+        cols.value = minCols.value
+      
     }else{
       cols.value = maxCols.value
     }
@@ -62,12 +65,15 @@ export const useCounterStore = defineStore('counter', () => {
       return e
     })
   }
+  function setPictures(data: Picture[]) {
+    pictures.value = data
+  }
 
   function setPictureTitle(title: string) {
     pictureTitle.value = title
   }
 
   return {sideShowFlag,pictures, cols,  mainWidth,mainHeight,photos,collect,filterData,maxCols,pictureTitle,
-    setMainWH,changeSideShowFlag,setPhotos,changeCols ,findPictures,setPictureTitle,
+    setMainWH,changeSideShowFlag,setPhotos,changeCols ,findPictures,setPictureTitle,setPictures,
     changePictures,updatePictures}
 })

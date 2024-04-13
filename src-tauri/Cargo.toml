@@ -2,7 +2,8 @@
 name = "app"
 version = "0.1.7"
 description = "A Tauri App"
-authors = ["golove <<liuziyu9@gmail.com>>"]
+
+
 license = ""
 repository = ""
 default-run = "app"
@@ -17,7 +18,10 @@ tauri-build = { version = "1.5.1", features = [] }
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.5.4", features = [ "system-tray", "api-all", "macos-private-api", "updater"] }
-reqwest = "0.11"
+reqwest = { version = "0.10.0-alpha.2", features = ["blocking"] }
+chrono = "0.4.19"
+image = "0.23.14"
+regex = "1.10.4"
 tokio = { version = "1", features = ["full"] }
 window-vibrancy = "0.3.2"
 mouse_position = "0.1.3"

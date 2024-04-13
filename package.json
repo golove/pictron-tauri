@@ -3,6 +3,7 @@
   "version": "0.1.7",
   "private": true,
   "type": "module",
+  "author" : "golove <<liuziyu9@gmail.com>>",
   "scripts": {
     "dev": "vite",
     "tauri": "tauri",
