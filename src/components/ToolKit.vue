@@ -47,8 +47,7 @@ const DownloadDone = h(
 )
 const props = defineProps({
     id: {
-        type: String,
-        default: ''
+        type: Number,
     }, like: {
         type: Boolean,
         default: false

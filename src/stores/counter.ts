@@ -3,9 +3,10 @@ import { defineStore } from 'pinia'
 import {data} from './data'
 import type { Picture } from '@/types'
 
+
 export const useCounterStore = defineStore('counter', () => {
   const cols = ref(3)
-  const pictures = ref<Picture[]>(data)
+  const pictures = ref<Picture[]>([])
   const filterData = ref<Picture[]>([])
   const sideShowFlag = ref(true)
   const maxCols = computed(() => mainWidth.value / cols.value < 230?cols.value-1:Math.floor(mainWidth.value / 200))
@@ -52,16 +53,18 @@ export const useCounterStore = defineStore('counter', () => {
     cols.value = Math.floor(mainWidth.value / 200)
   })
 
-  function changePictures(_id: string) {
-    pictures.value = pictures.value.filter((e: Picture) => e._id !== _id)
+  function changePictures(id: number) {
+    pictures.value = pictures.value.filter((e: Picture) => e.id !== id)
   }
 
-  function updatePictures(obj: { _id: string; fieldsToUpdate: Partial<Picture> }) {
+  function updatePictures(obj: { id: number; fieldsToUpdate: Partial<Picture> }) {
     pictures.value = pictures.value.map((e: Picture) => {
-      if (e._id === obj._id) {
+      console.log(e.id,obj.id)
+      if (e.id === obj.id) {
         e = { ...e, ...obj.fieldsToUpdate }
         // fetchUpdate({ _id: obj._id, ...obj.fieldsToUpdate })
       }
+      
       return e
     })
   }

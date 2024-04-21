@@ -23,9 +23,8 @@ const props = defineProps({
         default: 0
     },
     id:{
-        type:String,
+        type:Number,
         required:false,
-        default: '1'
     }
 })
 

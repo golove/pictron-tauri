@@ -1,5 +1,4 @@
 export interface Picture {
-  _id: string
   id: number
   url: string
   title: string

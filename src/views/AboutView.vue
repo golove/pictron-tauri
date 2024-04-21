@@ -5,23 +5,26 @@ import pgk from '../../package.json'
 import { ref } from 'vue';
 import { useCounterStore } from '@/stores/counter'; 
 import type { Picture } from '@/types';
+import type { Duration } from '@tauri-apps/api/http';
 const store = useCounterStore();
 
+interface SpiderResult {
+    pictures: Picture[],
+    duration: Duration,
+}
 
 const data =ref()
 
 let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
 
-listen('event-name',(e:Event<any>)=>{
-  console.log(e.payload)
-})
+
 
 
 function click() {
-  invoke('init_process').then((res) => {
+  invoke('spider_img', { url: url }).then((res) => {
     console.log(res)
-    store.setPictures(res as Picture[])
-    data.value = res
+    store.setPictures(res.pictures as Picture[])
+    // data.value = res
   })
 }
 </script>
