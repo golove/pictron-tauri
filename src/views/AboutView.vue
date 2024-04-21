@@ -21,7 +21,8 @@ let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
 
 
 function click() {
-  invoke('spider_img', { url: url }).then((res) => {
+  invoke('spider_img', { url: url }).then((value) => {
+    const res = value as SpiderResult
     console.log(res)
     store.setPictures(res.pictures as Picture[])
     // data.value = res
