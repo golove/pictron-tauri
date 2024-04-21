@@ -9,7 +9,7 @@ use tauri::{CustomMenuItem, Manager, Menu, MenuItem, Submenu, Window};
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 mod spider;
 use spider::{Database, Picture, Spider};
-use std::time::{Duration, Instant};
+use std::time:: Instant;
 
 use serde::Serialize;
 
@@ -24,12 +24,6 @@ fn spider_img(url: String) -> SpiderResult {
     let start_time = Instant::now();
     let spider = Spider::new(&url);
     // let spider = Spider::generate_test_data();
-    
-    
-
-    // 等待一秒，模拟网络请求
-    // std::thread::sleep(Duration::from_secs(1));
-    
 
     let end_time = Instant::now();
     // 计算执行时间
@@ -54,15 +48,23 @@ fn spider_img(url: String) -> SpiderResult {
     
 }
 
+
 #[tauri::command]
-fn get_data_from_db() -> Vec<Picture> {
-    let db = Database::new("picture.db").expect("Failed to create database");
-   match Database::get_all_pictures(&db){
-       Ok(pictures) => pictures,
-       Err(e) => {
-           println!("get data from db error: {}", e);
-           vec![]
-       }
+fn update_db(id:i64,sql:String) {
+    print!("{}",sql);
+    let db = Database::open("picture.db").expect("Failed to create database");
+    match Database::update_picture(&db,&sql) {
+        Ok(_) => println!("update db success id{}",id),
+        Err(e) => println!("update db error: {}", e),
+    }
+}
+#[tauri::command]
+fn select_from_db(sql:String)-> Vec<Picture> {
+    let db = Database::open("picture.db").expect("Failed to create database");
+   
+    match Database::select_picture(&db,&sql) {
+        Ok(pictures) => pictures,
+        Err(e) =>{ println!("select db error: {}", e); vec![]},
     }
 }
 
@@ -100,7 +102,7 @@ fn main() {
             Ok(())
         })
         .menu(menu)
-        .invoke_handler(tauri::generate_handler![spider_img,get_data_from_db])
+        .invoke_handler(tauri::generate_handler![spider_img,update_db,select_from_db])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

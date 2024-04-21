@@ -6,7 +6,7 @@ export interface Picture {
   star: number
   collect: boolean
   download: boolean
-  delete: boolean
+  deleted: boolean
 }
 
 export interface MasonryReturn {

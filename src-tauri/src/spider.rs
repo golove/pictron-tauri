@@ -1,16 +1,14 @@
 use chrono::Local;
 use image::io::Reader as ImageReader;
 use image::GenericImageView;
-use rand::Rng;
+use rand::{Rng, thread_rng};
 use rayon::prelude::*;
 use reqwest::blocking;
 use scraper::{Html, Selector};
 use serde::Serialize;
 use std::error::Error;
 pub mod database;
-pub use database::{Database,Picture,ImgDetail};
-
-
+pub use database::{Database, ImgDetail, Picture, TypeName};
 
 #[derive(Debug, Serialize)]
 struct PageInfo {
@@ -57,7 +55,7 @@ impl Spider {
         }
     }
 
-   pub fn get_pictures(spider:Spider)->Vec<Picture>{
+    pub fn get_pictures(spider: Spider) -> Vec<Picture> {
         spider.pictures
     }
 
@@ -121,7 +119,7 @@ impl Spider {
     pub fn generate_test_data() -> Self {
         let pictures = [
             Picture {
-                id: -3945333913678191923,
+                id: 78191923,
                 title: "XR tina 甜仔 太長今服飾 (64P)".to_owned(),
                 url: "http://dkleh8.xyz/pw/html_data/14/2404/7289780.html".to_owned(),
                 srcs: [
@@ -169,14 +167,15 @@ impl Spider {
                         src: "https://pic2303t.cc/i/2024/04/17/u5fcd9.jpg".to_owned(),
                         aspect_ratio: 0.6675,
                     },
-                ].to_vec(),
+                ]
+                .to_vec(),
                 star: 0,
                 collect: false,
                 download: false,
                 deleted: false,
             },
             Picture {
-                id: 2949825932941111718,
+                id: 1111718,
                 title: "原史奈 - F.spot (85P)".to_owned(),
                 url: "http://dkleh8.xyz/pw/html_data/14/2404/7289781.html".to_owned(),
                 srcs: [
@@ -192,22 +191,26 @@ impl Spider {
                         src: "https://pic2303r.link/i/2024/04/17/u8nxkh.jpg".to_owned(),
                         aspect_ratio: 0.729927,
                     },
-                ].to_vec(),
+                ]
+                .to_vec(),
                 star: 0,
                 collect: false,
                 download: false,
                 deleted: false,
             },
-        ].to_vec();
+        ]
+        .to_vec();
 
-        Spider{pictures: pictures as Vec<Picture>}
+        Spider {
+            pictures: pictures as Vec<Picture>,
+        }
     }
 
     // 生成随机id
-    pub fn new_id() -> i64 {
+    pub fn new_id() -> u32 {
         let now = Local::now();
-        let timestamp = now.timestamp();
-        let random_number: i64 = rand::thread_rng().gen::<i64>();
+        let timestamp = now.timestamp() as u32;
+        let random_number: u32 = thread_rng().gen();
         let unique_id = timestamp.wrapping_add(random_number);
         unique_id
     }

@@ -20,10 +20,10 @@ function updateModelValue(obj:{id:number,value:number}) {
     store.updatePictures({id:obj.id,fieldsToUpdate:{star:obj.value}})
 }
 
-function update(obj:{type:'collect'|'delete',id:number,value:boolean}){
+function update(obj:{type:'collect'|'deleted',id:number,value:boolean}){
   console.log(obj.id)
   store.updatePictures({id:obj.id,fieldsToUpdate:{[obj.type]:obj.value}})
-  if(obj.type==='delete'){
+  if(obj.type==='deleted'){
     store.changePictures(obj.id)
   }
 }

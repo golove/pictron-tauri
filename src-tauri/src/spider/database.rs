@@ -1,28 +1,32 @@
+use chrono::format::format;
 // database.rs
-use rusqlite::{Connection, Result};
+use rusqlite::{Connection, Result, Transaction};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string};
 
-
-
-#[derive(Debug,Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImgDetail {
     pub src: String,
     pub aspect_ratio: f32,
 }
 
-#[derive(Debug,Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Picture {
-    pub id: i64,
+    pub id: u32,
     pub title: String,
     pub url: String,
     pub srcs: Vec<ImgDetail>,
-    pub star: i32,
+    pub star: u8,
     pub collect: bool,
     pub download: bool,
     pub deleted: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TypeName {
+    name: String,
+    value: bool,
+}
 
 pub struct Database {
     conn: Connection,
@@ -34,17 +38,21 @@ impl Database {
         // 创建 picture 表
         conn.execute(
             "CREATE TABLE IF NOT EXISTS pictures (
-                  id              INTEGER PRIMARY KEY,
-                  title             TEXT NOT NULL,
-                  url              TEXT NOT NULL,
-                  srcs             TEXT NOT NULL,
-                  star             INTEGER NOT NULL,
-                  collect          BOOLEAN NOT NULL,
-                  download         BOOLEAN NOT NULL,
-                  deleted           BOOLEAN NOT NULL
-                  )",
+              id              INTEGER PRIMARY KEY,
+              title             TEXT NOT NULL,
+              url              TEXT NOT NULL,
+              srcs             TEXT NOT NULL,
+              star             INTEGER NOT NULL,
+              collect          BOOLEAN NOT NULL,
+              download         BOOLEAN NOT NULL,
+              deleted           BOOLEAN NOT NULL
+              )",
             [],
         )?;
+        Ok(Database { conn })
+    }
+    pub fn open(db_file: &str) -> Result<Self> {
+        let conn = Connection::open(db_file)?;
         Ok(Database { conn })
     }
 
@@ -57,14 +65,27 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_all_pictures(&self) -> Result<Vec<Picture>> {
+
+    // update picture
+    pub fn update_picture(self: &Self,sql: &str,) -> Result<()> {
         let mut stmt = self.conn.prepare(
-            "SELECT id, title, url, srcs, star, collect, download, deleted FROM pictures",
+            sql,
         )?;
-        let picture_iter = stmt.query_map([], |row| {
+        let _ = stmt.execute([])?;
+
+
+        Ok(())
+    }
+
+
+
+
+
+    pub fn select_picture(&self, sql: &str) -> Result<Vec<Picture>> {
+        let mut stmt = self.conn.prepare(sql)?;
+        let rows = stmt.query_map([], |row| {
             let srcs_str: String = row.get(3)?;
             let srcs: Vec<ImgDetail> = from_str(&srcs_str).unwrap_or_default();
-
             Ok(Picture {
                 id: row.get(0)?,
                 title: row.get(1)?,
@@ -77,10 +98,14 @@ impl Database {
             })
         })?;
 
-        let mut pictures = Vec::new();
-        for picture in picture_iter {
-            pictures.push(picture?);
+        let mut collected_pictures = Vec::new();
+        for row in rows {
+            collected_pictures.push(row?);
         }
-        Ok(pictures)
+
+        Ok(collected_pictures)
     }
+
+    
+
 }

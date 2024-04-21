@@ -15,15 +15,26 @@ import IconDocumentation from './components/icons/IconDocumentation.vue'
 import type { Picture } from '@/types';
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from './stores/counter'
+
 const { changeSideShowFlag, findPictures } = useCounterStore()
 const store = useCounterStore()
-const { mainWidth, sideShowFlag, maxCols, cols, pictureTitle } = storeToRefs(store)
-const data = ref()
+const { mainWidth, sideShowFlag, cols, pictureTitle } = storeToRefs(store)
+
+
+function filterImages(name:string,value:boolean|number){
+ let sql = `SELECT * FROM pictures WHERE ${name} = ${value}`
+  invoke("select_from_db",{sql}).then((response) => {
+    console.log(response)
+    store.setPictures(response as Picture[])
+  })
+}
+
 
 
 if (store.pictures.length === 0) {
   // console.log('get data from db')
-  invoke('get_data_from_db')
+  let sql = `SELECT * FROM pictures`
+  invoke('select_from_db',{sql})
     // `invoke` 返回异步函数
     .then((response) => {
       store.setPictures(response as Picture[])
@@ -123,6 +134,20 @@ watch(() => store.cols, (n) => {
       </i>
       <div class="title">{{ item.title }}</div>
     </router-link>
+
+    <div> <button @click="filterImages('collect',true)">filter collect</button></div>
+    <div> <button @click="filterImages('download',true)">filter download</button></div>
+    <div> <button @click="filterImages('deleted',true)">filter deleted</button></div>
+    <div> <button @click="filterImages('collect',false)">filter collect</button></div>
+    <div> <button @click="filterImages('download',false)">filter download</button></div>
+    <div> <button @click="filterImages('deleted',false)">filter deleted</button></div>
+
+    <div> <button @click="filterImages('star',1)">filter star 1</button></div>
+    <div> <button @click="filterImages('star',2)">filter star 2</button></div>
+    <div> <button @click="filterImages('star',3)">filter star 3</button></div>
+    <div> <button @click="filterImages('star',4)">filter star 4 </button></div>
+    <div> <button @click="filterImages('star',5)">filter star 5</button></div>
+
   </div>
   <main :style="{ width: mainWidth + 'px', left: sideWidth + 'px' }">
     <div data-tauri-drag-region class="toolbar">

@@ -87,7 +87,7 @@ function click(index: number) {
         emit('update', { type: 'collect', id: props.id, value: flags.value[0] })
     }
     if (index === 2) {
-        emit('update', { type: 'delete', id: props.id, value: flags.value[2] })
+        emit('update', { type: 'deleted', id: props.id, value: flags.value[2] })
     }
 }
 
