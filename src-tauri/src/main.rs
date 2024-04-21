@@ -49,11 +49,13 @@ fn spider_img(url: String) -> SpiderResult {
 }
 
 
+
+
 #[tauri::command]
 fn update_db(id:i64,sql:String) {
     print!("{}",sql);
     let db = Database::open("picture.db").expect("Failed to create database");
-    match Database::update_picture(&db,&sql) {
+    match db.update_picture(&sql) {
         Ok(_) => println!("update db success id{}",id),
         Err(e) => println!("update db error: {}", e),
     }
@@ -62,7 +64,7 @@ fn update_db(id:i64,sql:String) {
 fn select_from_db(sql:String)-> Vec<Picture> {
     let db = Database::open("picture.db").expect("Failed to create database");
    
-    match Database::select_picture(&db,&sql) {
+    match db.select_picture(&sql) {
         Ok(pictures) => pictures,
         Err(e) =>{ println!("select db error: {}", e); vec![]},
     }

@@ -3,6 +3,8 @@ use chrono::format::format;
 use rusqlite::{Connection, Result, Transaction};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string};
+// use tauri::AppHandle;
+// use std::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImgDetail {
@@ -32,6 +34,19 @@ pub struct Database {
     conn: Connection,
 }
 
+
+// pub fn initialize_database(app_handle: &AppHandle) -> Result<Connection, rusqlite::Error> {
+//     let app_dir = app_handle.path_resolver().app_data_dir().expect("The app data directory should exist.");
+//     fs::create_dir_all(&app_dir).expect("The app data directory should be created.");
+//     let sqlite_path = app_dir.join("MyApp.sqlite");
+
+//     let mut db = Connection::open(sqlite_path)?;
+
+
+//     Ok(db)
+// }
+
+
 impl Database {
     pub fn new(db_file: &str) -> Result<Self> {
         let conn = Connection::open(db_file)?;
@@ -56,7 +71,7 @@ impl Database {
         Ok(Database { conn })
     }
 
-    pub fn insert_picture(&self, picture: Picture) -> Result<()> {
+    pub fn insert_picture(self:&Self, picture: Picture) -> Result<()> {
         let serialized_srcs = to_string(&picture.srcs).unwrap_or_default();
         self.conn.execute(
             "INSERT INTO pictures (id, title, url, srcs, star, collect, download, deleted) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
@@ -67,7 +82,7 @@ impl Database {
 
 
     // update picture
-    pub fn update_picture(self: &Self,sql: &str,) -> Result<()> {
+    pub fn update_picture(self:&Self,sql: &str,) -> Result<()> {
         let mut stmt = self.conn.prepare(
             sql,
         )?;
@@ -81,7 +96,7 @@ impl Database {
 
 
 
-    pub fn select_picture(&self, sql: &str) -> Result<Vec<Picture>> {
+    pub fn select_picture(self:&Self, sql: &str) -> Result<Vec<Picture>> {
         let mut stmt = self.conn.prepare(sql)?;
         let rows = stmt.query_map([], |row| {
             let srcs_str: String = row.get(3)?;

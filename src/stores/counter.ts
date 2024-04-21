@@ -1,6 +1,5 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import { data } from './data'
 import type { Picture } from '@/types'
 import { invoke } from '@tauri-apps/api/tauri'
 
@@ -16,7 +15,7 @@ export const useCounterStore = defineStore('counter', () => {
     mainWidth.value < 400 ? 1 : mainWidth.value / cols.value > 350 ? cols.value + 1 : 1
   )
   const pictureTitle = ref('')
-  const photos = ref<Picture>(data[0])
+  const photos = ref<Picture>()
   const collect = computed<Picture[]>(() => pictures.value.filter((e) => e.collect))
   function changeCols(cb: (n: number) => number) {
     const n = cb(cols.value)
