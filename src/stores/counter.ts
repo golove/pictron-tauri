@@ -15,7 +15,7 @@ export const useCounterStore = defineStore('counter', () => {
     mainWidth.value < 400 ? 1 : mainWidth.value / cols.value > 350 ? cols.value + 1 : 1
   )
   const pictureTitle = ref('')
-  const photos = ref<Picture>()
+  const photos = ref<Picture>(pictures.value[0])
   const collect = computed<Picture[]>(() => pictures.value.filter((e) => e.collect))
   function changeCols(cb: (n: number) => number) {
     const n = cb(cols.value)
