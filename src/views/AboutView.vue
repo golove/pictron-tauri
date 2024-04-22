@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { emit, listen ,type Event} from '@tauri-apps/api/event'
+
 import { invoke } from '@tauri-apps/api/tauri'
 import pgk from '../../package.json'
 import { ref } from 'vue';
 import { useCounterStore } from '@/stores/counter'; 
 import type { Picture } from '@/types';
 import type { Duration } from '@tauri-apps/api/http';
+import { sendNotification } from '@tauri-apps/api/notification';
+
 const store = useCounterStore();
 
 interface SpiderResult {
@@ -23,8 +25,9 @@ let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
 function click() {
   invoke('spider_img', { url: url }).then((value) => {
     const res = value as SpiderResult
-    console.log(res)
+    // console.log(res)
     store.setPictures(res.pictures as Picture[])
+    sendNotification({ title: 'Pictron', body: '从网络成功爬取图片' });
     // data.value = res
   })
 }

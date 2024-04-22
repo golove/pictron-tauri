@@ -40,8 +40,9 @@ const { mainWidth, sideShowFlag, cols, pictureTitle } = storeToRefs(store)
 function filterImages(name:string,value:boolean|number){
  let sql = `SELECT * FROM pictures WHERE ${name} = ${value}`
   invoke("select_from_db",{sql}).then((response) => {
-    console.log(response)
+   
     store.setPictures(response as Picture[])
+    sendNotification({ title: 'Pictron', body: '从数据库成功获取图片' });
   })
 }
 
