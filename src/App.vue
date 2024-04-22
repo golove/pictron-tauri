@@ -16,6 +16,22 @@ import type { Picture } from '@/types';
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from './stores/counter'
 
+
+import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/api/notification';
+
+async function checkPermission() {
+  let permissionGranted = await isPermissionGranted();
+  console.log("permissionGranted:", permissionGranted)
+if (!permissionGranted) {
+  const permission = await requestPermission();
+  permissionGranted = permission === 'granted';
+}
+if (permissionGranted) {
+  sendNotification('Pictron is awesome!');
+  sendNotification({ title: 'Pictron', body: 'Tauri is awesome!' });
+}
+}
+
 const { changeSideShowFlag, findPictures } = useCounterStore()
 const store = useCounterStore()
 const { mainWidth, sideShowFlag, cols, pictureTitle } = storeToRefs(store)
@@ -113,9 +129,9 @@ watch(() => store.cols, (n) => {
 
 <template>
 
-  <customizeTitlebar @showSide="changeSideShowFlag()" />
-  <div :style="{ width: sideWidth + 'px' }" class="side">
 
+  <div :style="{ width: sideWidth + 'px' }" class="side">
+    <customizeTitlebar @showSide="changeSideShowFlag()" />
 
     <div class="searchBox">
       <i>
@@ -147,6 +163,7 @@ watch(() => store.cols, (n) => {
     <div> <button @click="filterImages('star',3)">filter star 3</button></div>
     <div> <button @click="filterImages('star',4)">filter star 4 </button></div>
     <div> <button @click="filterImages('star',5)">filter star 5</button></div>
+    <div> <button @click="checkPermission">获取权限</button></div>  
 
   </div>
   <main :style="{ width: mainWidth + 'px', left: sideWidth + 'px' }">
@@ -188,7 +205,7 @@ watch(() => store.cols, (n) => {
   margin-top: 30px;
   padding: v-bind(sideMargin);
   height: 100%;
-  background-color: rgba(135, 135, 135, 0.1);
+  background-color: rgba(211, 211, 211, 0);
   overflow: hidden;
   transition: all 0.3s ease;
 }
@@ -288,7 +305,7 @@ main {
   position: absolute;
   min-height: 100vh;
   transition: all 0.3s ease;
-  background: rgba(92, 63, 74, 0.05);
+  background: rgba(165, 162, 163, 0.55);
 }
 
 

@@ -1,14 +1,20 @@
 use chrono::Local;
 use image::io::Reader as ImageReader;
 use image::GenericImageView;
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 use rayon::prelude::*;
 use reqwest::blocking;
+use rusqlite::Connection;
+use std::error::Error;
+
+use crate::ImgDetail;
+use crate::Picture;
 use scraper::{Html, Selector};
 use serde::Serialize;
-use std::error::Error;
-pub mod database;
-pub use database::{Database, ImgDetail, Picture, TypeName};
+
+
+use crate::database;
+
 
 #[derive(Debug, Serialize)]
 struct PageInfo {
@@ -21,9 +27,7 @@ pub struct Spider {
 }
 
 impl Spider {
-    pub fn new(url: &str) -> Result<Self, Box<dyn Error>> {
-        // 打开连接到 SQLite 数据库
-        let db = Database::new("picture.db").expect("Failed to create database");
+    pub fn new(db: &Connection, url: &str) -> Result<Self, Box<dyn Error>> {
         match Self::get_web_content(url) {
             Ok(body) => {
                 let pages_info = Self::parse_page(&body);
@@ -38,7 +42,7 @@ impl Spider {
                 // 批量插入图片数据
                 for picture in pictures {
                     println!("Inserting picture: {}", &picture.id);
-                    if let Err(err) = db.insert_picture(picture) {
+                    if let Err(err) = database::insert_picture(db, picture) {
                         eprintln!("Failed to insert picture: {}", err);
                         // Handle error here if needed
                     }
@@ -116,95 +120,104 @@ impl Spider {
         Ok(body)
     }
 
-    pub fn generate_test_data() -> Self {
-        let pictures = [
-            Picture {
-                id: 78191923,
-                title: "XR tina 甜仔 太長今服飾 (64P)".to_owned(),
-                url: "http://dkleh8.xyz/pw/html_data/14/2404/7289780.html".to_owned(),
-                srcs: [
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u53655.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u53g3g.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u53mbw.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u53ytx.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u541da.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u5dss1.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u5dzna.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u5evj4.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u5ewl0.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u5f9ez.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303t.cc/i/2024/04/17/u5fcd9.jpg".to_owned(),
-                        aspect_ratio: 0.6675,
-                    },
-                ]
-                .to_vec(),
-                star: 0,
-                collect: false,
-                download: false,
-                deleted: false,
-            },
-            Picture {
-                id: 1111718,
-                title: "原史奈 - F.spot (85P)".to_owned(),
-                url: "http://dkleh8.xyz/pw/html_data/14/2404/7289781.html".to_owned(),
-                srcs: [
-                    ImgDetail {
-                        src: "https://pic2303r.link/i/2024/04/17/u8lgwz.jpg".to_owned(),
-                        aspect_ratio: 1.0,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303r.link/i/2024/04/17/u8m0f4.jpg".to_owned(),
-                        aspect_ratio: 0.729927,
-                    },
-                    ImgDetail {
-                        src: "https://pic2303r.link/i/2024/04/17/u8nxkh.jpg".to_owned(),
-                        aspect_ratio: 0.729927,
-                    },
-                ]
-                .to_vec(),
-                star: 0,
-                collect: false,
-                download: false,
-                deleted: false,
-            },
-        ]
-        .to_vec();
+    // pub fn generate_test_data(db: &Connection) -> Result<Self, Box<dyn Error>> {
+    //     let pictures = [
+    //         Picture {
+    //             id: 78191923,
+    //             title: "XR tina 甜仔 太長今服飾 (64P)".to_owned(),
+    //             url: "http://dkleh8.xyz/pw/html_data/14/2404/7289780.html".to_owned(),
+    //             srcs: [
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u53655.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u53g3g.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u53mbw.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u53ytx.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u541da.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u5dss1.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u5dzna.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u5evj4.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u5ewl0.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u5f9ez.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303t.cc/i/2024/04/17/u5fcd9.jpg".to_owned(),
+    //                     aspect_ratio: 0.6675,
+    //                 },
+    //             ]
+    //             .to_vec(),
+    //             star: 0,
+    //             collect: false,
+    //             download: false,
+    //             deleted: false,
+    //         },
+    //         Picture {
+    //             id: 1111718,
+    //             title: "原史奈 - F.spot (85P)".to_owned(),
+    //             url: "http://dkleh8.xyz/pw/html_data/14/2404/7289781.html".to_owned(),
+    //             srcs: [
+    //                 ImgDetail {
+    //                     src: "https://pic2303r.link/i/2024/04/17/u8lgwz.jpg".to_owned(),
+    //                     aspect_ratio: 1.0,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303r.link/i/2024/04/17/u8m0f4.jpg".to_owned(),
+    //                     aspect_ratio: 0.729927,
+    //                 },
+    //                 ImgDetail {
+    //                     src: "https://pic2303r.link/i/2024/04/17/u8nxkh.jpg".to_owned(),
+    //                     aspect_ratio: 0.729927,
+    //                 },
+    //             ]
+    //             .to_vec(),
+    //             star: 0,
+    //             collect: false,
+    //             download: false,
+    //             deleted: false,
+    //         },
+    //     ]
+    //     .to_vec();
 
-        Spider {
-            pictures: pictures as Vec<Picture>,
-        }
-    }
+    //     let cloned_pictures = pictures.clone();
+    //     for picture in pictures {
+    //         println!("Inserting picture: {}", &picture.id);
+    //         if let Err(err) = database::insert_picture(db, picture) {
+    //             eprintln!("Failed to insert picture: {}", err);
+    //             // Handle error here if needed
+    //         }
+    //     }
+
+    // Ok(Spider {
+    //         pictures: cloned_pictures as Vec<Picture>,
+    //     })
+    // }
 
     // 生成随机id
     pub fn new_id() -> u32 {

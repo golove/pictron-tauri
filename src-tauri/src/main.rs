@@ -4,14 +4,51 @@
     windows_subsystem = "windows"
 )]
 
+use cocoa::{
+    appkit::{NSWindow, NSWindowToolbarStyle},
+    base::id,
+};
+use objc::{class, msg_send, sel, sel_impl};
+
+use state::{AppState, ServiceAccess};
 // use chrono::Duration;
-use tauri::{CustomMenuItem, Manager, Menu, MenuItem, Submenu, Window};
+use tauri::{AppHandle, CustomMenuItem, Manager, Menu, MenuItem, Result, State, Submenu};
+// tauri::api::file;
+
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 mod spider;
-use spider::{Database, Picture, Spider};
-use std::time:: Instant;
+use spider::Spider;
+use std::time::Instant;
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+
+mod database;
+mod state;
+
+// #[tauri::command]
+// async fn read_file(path: String) -> Result<String, String> {
+//     // 读取文件内容
+//     let contents = tauri::api::file::read_text_file(&path).map_err(|e| e.to_string())?;
+//     Ok(contents)
+// }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImgDetail {
+    pub src: String,
+    pub aspect_ratio: f32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Picture {
+    pub id: u32,
+    pub title: String,
+    pub url: String,
+    pub srcs: Vec<ImgDetail>,
+    pub star: u8,
+    pub collect: bool,
+    pub download: bool,
+    pub deleted: bool,
+}
 
 #[derive(Serialize)]
 struct SpiderResult {
@@ -20,56 +57,54 @@ struct SpiderResult {
 }
 
 #[tauri::command]
-fn spider_img(url: String) -> SpiderResult {
+fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
     let start_time = Instant::now();
-    let spider = Spider::new(&url);
+
+    // let db = Database::new().expect("Failed to create database");
+
     // let spider = Spider::generate_test_data();
 
-    let end_time = Instant::now();
-    // 计算执行时间
-    let duration = (end_time - start_time).as_secs();
-    
-    match spider {
+    match app_handle.db(|db| Spider::new(db, &url)) {
+        // match app_handle.db(|db| Spider::generate_test_data(db)) {
         Ok(s) => {
             let pictures = Spider::get_pictures(s);
-            SpiderResult {
-                pictures,
-                duration,
-            }
+
+            let end_time = Instant::now();
+            // 计算执行时间
+            let duration = (end_time - start_time).as_secs();
+
+            SpiderResult { pictures, duration }
         }
         Err(e) => {
             println!("spider error: {}", e);
             SpiderResult {
                 pictures: vec![],
-                duration,
+                duration: 0,
             }
         }
     }
-    
 }
 
-
-
-
 #[tauri::command]
-fn update_db(id:i64,sql:String) {
-    print!("{}",sql);
-    let db = Database::open("picture.db").expect("Failed to create database");
-    match db.update_picture(&sql) {
-        Ok(_) => println!("update db success id{}",id),
+fn update_db(app_handle: AppHandle, id: i64, sql: String) {
+    print!("{}", sql);
+    // let db = Database::new().expect("Failed to create database");
+    match app_handle.db(|db| database::update_picture(db, &sql)) {
+        Ok(_) => println!("update db success id{}", id),
         Err(e) => println!("update db error: {}", e),
     }
 }
 #[tauri::command]
-fn select_from_db(sql:String)-> Vec<Picture> {
-    let db = Database::open("picture.db").expect("Failed to create database");
-   
-    match db.select_picture(&sql) {
+fn select_from_db(app_handle: AppHandle, sql: String) -> Vec<Picture> {
+    // let db = Database::new().expect("Failed to create database");
+    match app_handle.db(|db| database::select_picture(db, &sql)) {
         Ok(pictures) => pictures,
-        Err(e) =>{ println!("select db error: {}", e); vec![]},
+        Err(e) => {
+            println!("select db error: {}", e);
+            vec![]
+        }
     }
 }
-
 
 fn main() {
     let quit = CustomMenuItem::new("quit".to_string(), "Quit");
@@ -85,26 +120,41 @@ fn main() {
     // 目标网页的URL
     // let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
     tauri::Builder::default()
+        .manage(AppState {
+            db: Default::default(),
+        })
+        .menu(menu)
+        .invoke_handler(tauri::generate_handler![
+            spider_img,
+            update_db,
+            select_from_db,
+        ])
         .setup(|app| {
+            let handle = app.handle();
+
+            let app_state: tauri::State<AppState> = handle.state();
+            let db =
+                database::initialize_database(&handle).expect("Database initialize should succeed");
+            *app_state.db.lock().unwrap() = Some(db);
+
             // 根据label获取窗口实例
             let main_window = app.get_window("main").unwrap();
-             // 设置窗口模糊特效
-             #[cfg(target_os = "macos")]
-             apply_vibrancy(&main_window, NSVisualEffectMaterial::Sidebar, None, None)
-                 .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
- 
 
-            let id = main_window.listen("event-name", |event| {
-                println!("got window event-name with payload {:?}", event.payload());
-            });
-            // unlisten to the event using the `id` returned on the `listen` function
-            // an `once` API is also exposed on the `Window` struct
-           
+            // 设置窗口模糊特效
+            #[cfg(target_os = "macos")]
+            apply_vibrancy(&main_window, NSVisualEffectMaterial::Sidebar, None, None)
+                .expect("Unsupported platform! 'apply_vibrancy' is only supported on macOS");
+
+            // 添加toolbar让"红绿灯"看起来更自然
+            let ns_window = main_window.ns_window().unwrap() as id;
+            unsafe {
+                ns_window.setToolbar_(msg_send![class!(NSToolbar), new]);
+                ns_window
+                    .setToolbarStyle_(NSWindowToolbarStyle::NSWindowToolbarStyleUnifiedCompact);
+            }
 
             Ok(())
         })
-        .menu(menu)
-        .invoke_handler(tauri::generate_handler![spider_img,update_db,select_from_db])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

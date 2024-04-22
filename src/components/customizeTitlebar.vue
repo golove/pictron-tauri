@@ -31,7 +31,7 @@ const width = computed(()=>store.sideShowFlag? 200 : 0)
   left: 0;
   right: 0;
   z-index: 1000;
-  background-color: rgba(135, 135, 135, 0.1);
+  background-color: rgba(135, 135, 135, 0);
 }
 
 .titlebar-button {

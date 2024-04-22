@@ -16,6 +16,24 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "path": {
+        "all": true
+      },
+      "fs": {
+        "all": true,
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,
+        "exists": true
+      },
+      "notification": {
+        "all": true 
       }
     },
     "systemTray": {
@@ -29,7 +47,7 @@
       "deb": {
         "depends": []
       },
-    
+
       "externalBin": [],
       "icon": [
         "icons/32x32.png",
@@ -49,7 +67,7 @@
       },
       "resources": [],
       "shortDescription": "",
-      "targets": ["dmg","updater"],
+      "targets": ["dmg", "updater"],
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
@@ -57,13 +75,11 @@
       }
     },
     "security": {
-      "csp": null
+      "csp": "script-src asset: https://asset.localhost"
     },
     "updater": {
       "active": true,
-      "endpoints": [
-        "https://github.com/golove/pictron-tauri/releases/download/v0.1.9/latest.json"
-      ],
+      "endpoints": ["https://github.com/golove/pictron-tauri/releases/download/v0.1.9/latest.json"],
       "dialog": true,
       "windows": {
         "installMode": "passive"
@@ -73,16 +89,16 @@
     "windows": [
       {
         "fullscreen": false,
+        "width": 950,
         "height": 620,
+        "minHeight": 620,
+        "minWidth": 950,
         "resizable": true,
         "title": "pictron",
         "titleBarStyle": "Overlay",
-        "width": 850,
-          "hiddenTitle": true,
-          "label": "main",
+        "hiddenTitle": true,
+        "label": "main",
         "transparent": true,
-        "minHeight": 620,
-        "minWidth": 850,
         "acceptFirstMouse": true
       }
     ],
