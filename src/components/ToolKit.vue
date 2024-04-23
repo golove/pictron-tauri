@@ -1,6 +1,7 @@
-
 <script setup lang="ts">
-import { h, ref } from 'vue'
+
+import { computed, h, ref,watch } from 'vue'
+// import { listen } from '@tauri-apps/api/event'
 const heart = h(
     'svg',
     {
@@ -56,54 +57,75 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    deleted: {
+        type: Boolean,
+        default: false
+    },
     length: {
         type: Number,
         default: 0
+    },
+    downloadCount:{
+        type:Number,
+        default:0
     }
+
 })
 const emit = defineEmits(['update'])
 const fill = '#ddd'
 const actFill = '#f88'
 const downloadFlag = ref(false)
-const texts = ref([0, 0, 0])
-const flags = ref([props.like, props.download, false])
+// const texts = ref([0, 0, 0])
+const flags = ref([props.like, props.download, props.deleted])
 
-function click(index: number) {
-    flags.value[index] = !flags.value[index]
-    if (index === 1 && flags.value[1]) {
-        const st = setInterval(() => {
-            if (texts.value[1] >= props.length) {
-                clearInterval(st)
-                texts.value[1] = 0
-                downloadFlag.value = true
-                emit('update', { type: 'download', id: props.id, value: flags.value[1] })
-                return
-            }
-            texts.value[1]++
-        }, 10)
+
+
+
+let dCount = computed(() => props.downloadCount)
+
+function click(type: string, n: number) {
+
+    flags.value[n] = !flags.value[n]
+    emit('update', { type, id: props.id, value: flags.value[n] })
+    // console.log(key,newValue,value)
+    if (n === 0 && flags.value[n]) {
+
+        if (flags.value[2]) {
+            console.log('deleted')
+            click('deleted', 2)
+        }
     }
-    if (index === 0) {
-        flags.value[0] ? texts.value[0]++ : texts.value[0]--
-        emit('update', { type: 'collect', id: props.id, value: flags.value[0] })
+    if (n === 2 && flags.value[n]) {
+        if (flags.value[0]) {
+            console.log('collect', flags.value[n], n)
+            click('collect', 0)
+        }
     }
-    if (index === 2) {
-        emit('update', { type: 'deleted', id: props.id, value: flags.value[2] })
-    }
+   
 }
+
+watch(()=>dCount.value, (newVal) => {
+   
+        if (newVal > props.length) {
+            downloadFlag.value = true
+        }
+    
+})
+
 
 </script>
 <template>
     <div class="toolkit">
-        <div class="toolkitItem" @click.stop="click(0)">
+        <div class="toolkitItem" @click.stop="click('collect', 0)">
             <heart :fill="flags[0] ? actFill : fill" width='18px' height='18px' />
             <!-- <div>{{ texts[0] }}</div> -->
         </div>
-        <div class="toolkitItem" @click.stop="click(1)">
+        <div class="toolkitItem" @click.stop="click('download', 1)">
             <DownloadDone v-if="downloadFlag" :fill="flags[1] ? 'green' : fill" width='20px' height='20px' />
             <downloadV v-else :fill="flags[1] ? actFill : fill" width='20px' height='20px' />
-            <div>{{ downloadFlag ? '' : texts[1] ? texts[1] : '' }}</div>
+            <div>{{ downloadFlag ? '' : dCount ? dCount : '' }}</div>
         </div>
-        <div class="toolkitItem" @click.stop="click(2)">
+        <div class="toolkitItem" @click.stop="click('deleted', 2)">
             <trash :fill="flags[2] ? actFill : fill" width='20px' height='20px' />
         </div>
     </div>
@@ -134,4 +156,5 @@ function click(index: number) {
 
 svg:hover {
     fill: #f88;
-}</style>
+}
+</style>

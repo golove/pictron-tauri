@@ -16,7 +16,6 @@ export const useCounterStore = defineStore('counter', () => {
   )
   const pictureTitle = ref('')
   const photos = ref<Picture>(pictures.value[0])
-  const collect = computed<Picture[]>(() => pictures.value.filter((e) => e.collect))
   function changeCols(cb: (n: number) => number) {
     const n = cb(cols.value)
     if (n >= minCols.value && n <= maxCols.value) {
@@ -58,12 +57,6 @@ export const useCounterStore = defineStore('counter', () => {
   }
 
   function updatePictures(obj: { id: number; fieldsToUpdate: Partial<Picture> }) {
-    pictures.value = pictures.value.map((e: Picture) => {
-      if (e.id === obj.id) {
-        console.log(e.id, obj.id)
-        e = { ...e, ...obj.fieldsToUpdate }
-
-        // fetchUpdate({ _id: obj._id, ...obj.fieldsToUpdate })
         const [key, value] = Object.entries(obj.fieldsToUpdate)[0]
         const sql = `UPDATE pictures SET ${key} = ${value} WHERE id = ${obj.id}`
         invoke('update_db', {
@@ -74,10 +67,6 @@ export const useCounterStore = defineStore('counter', () => {
         }).then((res) => {
           console.log(res)
         })
-      }
-
-      return e
-    })
   }
   function setPictures(data: Picture[]) {
     pictures.value = data
@@ -94,7 +83,6 @@ export const useCounterStore = defineStore('counter', () => {
     mainWidth,
     mainHeight,
     photos,
-    collect,
     filterData,
     maxCols,
     pictureTitle,

@@ -53,6 +53,8 @@ pub fn upgrade_database_if_needed(db: &mut Connection, existing_version: u32) ->
     tx.commit()?;
   }
 
+  
+
   Ok(())
 }
 

@@ -32,7 +32,7 @@ if (permissionGranted) {
 }
 }
 
-const { changeSideShowFlag, findPictures } = useCounterStore()
+const { changeSideShowFlag } = useCounterStore()
 const store = useCounterStore()
 const { mainWidth, sideShowFlag, cols, pictureTitle } = storeToRefs(store)
 
@@ -50,7 +50,7 @@ function filterImages(name:string,value:boolean|number){
 
 if (store.pictures.length === 0) {
   // console.log('get data from db')
-  let sql = `SELECT * FROM pictures`
+  let sql = `SELECT * FROM pictures WHERE deleted = false`
   invoke('select_from_db',{sql})
     // `invoke` 返回异步函数
     .then((response) => {
@@ -63,11 +63,6 @@ const links = [{
   to: '/',
   title: 'Home',
   icon: IconEcosystem
-},
-{
-  to: '/collect',
-  title: 'Collect',
-  icon: IconSupport
 },
 {
   to: '/about',
@@ -101,8 +96,15 @@ const toolBarWidth = computed(() => sideShowFlag.value ? "100%" : "calc(100% - 1
 
 const searchText = ref('')
 watch(() => searchText.value, (n) => {
-  console.log(searchText.value)
-  findPictures(searchText.value)
+  // console.log(searchText.value)
+  // findPictures(searchText.value)
+  // sql 从数据库中查找title包含searchText的图片
+  let sql = `SELECT * FROM pictures WHERE title LIKE '%${n}%'`
+  invoke("select_from_db",{sql}).then((response) => {
+    store.setPictures(response as Picture[])
+    sendNotification({ title: 'Pictron', body: '从数据库成功获取图片' });
+  })
+
 })
 function clearSearchText() {
   searchText.value = ''
@@ -151,13 +153,13 @@ watch(() => store.cols, (n) => {
       </i>
       <div class="title">{{ item.title }}</div>
     </router-link>
-
+    <div> <button @click="filterImages('deleted',false)">filter all</button></div>
     <div> <button @click="filterImages('collect',true)">filter collect</button></div>
     <div> <button @click="filterImages('download',true)">filter download</button></div>
     <div> <button @click="filterImages('deleted',true)">filter deleted</button></div>
-    <div> <button @click="filterImages('collect',false)">filter collect</button></div>
-    <div> <button @click="filterImages('download',false)">filter download</button></div>
-    <div> <button @click="filterImages('deleted',false)">filter deleted</button></div>
+    <div> <button @click="filterImages('collect',false)">filter uncollect</button></div>
+    <div> <button @click="filterImages('download',false)">filter undownload</button></div>
+   
 
     <div> <button @click="filterImages('star',1)">filter star 1</button></div>
     <div> <button @click="filterImages('star',2)">filter star 2</button></div>

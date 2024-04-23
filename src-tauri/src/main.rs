@@ -12,13 +12,13 @@ use objc::{class, msg_send, sel, sel_impl};
 
 use state::{AppState, ServiceAccess};
 // use chrono::Duration;
-use tauri::{AppHandle, CustomMenuItem, Manager, Menu, MenuItem, Result, State, Submenu};
+use tauri::{api::dir, window, AppHandle, CustomMenuItem, Manager, Menu, MenuItem, Result, State, Submenu, Window};
 // tauri::api::file;
 
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 mod spider;
 use spider::Spider;
-use std::time::Instant;
+use std::{fs::File, io::Write, time::Instant};
 
 use serde::{Deserialize, Serialize};
 
@@ -88,7 +88,6 @@ fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
 #[tauri::command]
 fn update_db(app_handle: AppHandle, id: i64, sql: String) {
     print!("{}", sql);
-    // let db = Database::new().expect("Failed to create database");
     match app_handle.db(|db| database::update_picture(db, &sql)) {
         Ok(_) => println!("update db success id{}", id),
         Err(e) => println!("update db error: {}", e),
@@ -96,12 +95,92 @@ fn update_db(app_handle: AppHandle, id: i64, sql: String) {
 }
 #[tauri::command]
 fn select_from_db(app_handle: AppHandle, sql: String) -> Vec<Picture> {
-    // let db = Database::new().expect("Failed to create database");
     match app_handle.db(|db| database::select_picture(db, &sql)) {
         Ok(pictures) => pictures,
         Err(e) => {
             println!("select db error: {}", e);
             vec![]
+        }
+    }
+}
+
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+  msg: u32,
+}
+
+use tokio::spawn;
+
+// remember to call `.manage(MyState::default())`
+#[tauri::command]
+async fn download_img(window:Window, srcs: Vec<ImgDetail>, title: String,id:u32) {
+    // 选择下载目录
+    let home_dir = tauri::api::path::home_dir().unwrap().join("Downloads");
+    let download_dir = home_dir.join(&title);
+    if !download_dir.exists() {
+        match std::fs::create_dir(&download_dir) {
+            Ok(_) => {
+                let mut index = 1;
+                // 并发下载图片
+                // let mut handles = vec![];
+                for src in srcs {
+                    let window_clone = window.clone();
+                    let index_clone = index;
+                    let url = src.src.clone();
+                    let file_name = &url.split('/').last().unwrap();
+                    let file_path = download_dir.join(file_name);
+                    let file = File::create(&file_path).unwrap();
+                    let handle = spawn(async move {
+                        download(&url, file);
+                        let event_name = "download-success".to_string()+id.to_string().as_str();
+                        let _ = window_clone.emit(&event_name,Payload{msg:index_clone});
+                    });
+                   
+                    // handles.push(handle);
+                    handle.await.unwrap();
+                    index += 1;
+                }
+                // // 等待所有下载完成
+                // let mut res = "download success".to_string();
+                // for handle in handles {
+                //     let result = handle.join().unwrap();
+                //     let _ = window.emit("download-success",Payload{msg:index});
+                //     index += 1;
+                //     res = format!("{},{}", res, result);
+                // }
+
+                
+                // format!("create dir success, download {} images", &index)
+            }
+
+            Err(e) => {
+                print!("create dir error: {}", e);
+                // format!("create dir error: {}", e)
+            }
+        }
+    } else {
+        print!( "{} already exists", download_dir.to_str().unwrap());
+        // format!("{} already exists", download_dir.to_str().unwrap())
+    }
+}
+
+
+fn download(url: &str, mut file: File) -> String {
+    match reqwest::blocking::get(url) {
+        Ok(mut response) => {
+            // 保存图片到指定目录
+
+            let mut buffer = vec![];
+            response.copy_to(&mut buffer).unwrap();
+            file.write_all(&buffer).unwrap();
+            // println!("download success");
+           
+            format!("download success")
+            
+        }
+        Err(e) => {
+            println!("download error: {}", e);
+            return "download error".to_string();
         }
     }
 }
@@ -128,6 +207,7 @@ fn main() {
             spider_img,
             update_db,
             select_from_db,
+            download_img
         ])
         .setup(|app| {
             let handle = app.handle();
