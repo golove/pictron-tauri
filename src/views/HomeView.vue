@@ -9,6 +9,8 @@ import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from '@/stores/counter';
 import { invoke } from '@tauri-apps/api'
+import { appDataDir } from '@tauri-apps/api/path';
+import { ask, open } from '@tauri-apps/api/dialog';
 // import { sendNotification } from '@tauri-apps/api/notification';
 
 
@@ -45,20 +47,64 @@ function update(obj: { type: 'collect' | 'download' | 'deleted', id: number, val
   if (obj.type === 'download' && obj.value) {
     let img = imgs.value.find(i => i.id === obj.id)
     if (img) {
-      eventListenerList.value.push({ event: "download-success" + img.id, id: img.id, count: 0 })
-      invoke('download_img', { srcs: img.srcs, title: img.title, id: img.id }).then(res => {
+      invoke("get_folder_path").then(async (res) => {
         console.log(res)
-      })
+        if (res) {
+          eventListenerList.value.push({ event: "download-success" + img.id, id: img.id, count: 0 })
+          invoke('download_img', { srcs: img.srcs, title: img.title, id: img.id }).then(res => {
+            console.log(res)
+          })
 
-      downloadSuccess(img.id)
+          downloadSuccess(img.id)
+        } else {
+          const yes = await ask("选择保存文件夹", '默认保存在Download文件夹下，是否更改？');
+          // const yes2 = await ask('This action cannot be reverted. Are you sure?', { title: 'Tauri', type: 'warning' });
+
+
+          if (yes) {
+            const selected = await open({
+              directory: true,
+              multiple: true,
+              defaultPath: await appDataDir(),
+            }
+            )
+            let path = selected as string[];
+            if (path.length === 0) return;
+            invoke("insert_config",
+              { path: path[0] }
+            ).then((res) => {
+              console.log(res);
+              if (res === "ok") {
+                eventListenerList.value.push({ event: "download-success" + img.id, id: img.id, count: 0 })
+                invoke('download_img', { srcs: img.srcs, title: img.title, id: img.id }).then(res => {
+                  console.log(res)
+                })
+
+
+              }
+            });
+          } else {
+            eventListenerList.value.push({ event: "download-success" + img.id, id: img.id, count: 0 })
+            invoke('download_img', { srcs: img.srcs, title: img.title, id: img.id }).then(res => {
+              console.log(res)
+            })
+          }
+        }
+      })
     }
   }
 }
+
+
+
+
 
 // const downloadCount = ref(0)
 interface DownloadSuccessEvent {
   msg: number
 }
+
+
 
 function downloadSuccess(id: number) {
   eventListenerList.value.map(item => {
@@ -78,9 +124,9 @@ function downloadSuccess(id: number) {
 
 
 let dcount = (id: number) => {
-  if(eventListenerList.value.length === 0) return 0
+  if (eventListenerList.value.length === 0) return 0
   let items = eventListenerList.value.filter(item => item.id === id)
-  if(items.length === 0) return 0
+  if (items.length === 0) return 0
   return items[0].count
 
 }

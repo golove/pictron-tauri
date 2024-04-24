@@ -20,6 +20,19 @@
       "path": {
         "all": true
       },
+      "dialog": {
+        "all": true, 
+        "ask": true, 
+        "confirm": true, 
+        "message": true,
+        "open": true, 
+        "save": true 
+      },
+      "app": {
+        "all": true, 
+        "show": true,
+        "hide": true
+      },
       "fs": {
         "all": true,
         "readFile": true,
@@ -32,6 +45,7 @@
         "renameFile": true,
         "exists": true
       },
+     
       "notification": {
         "all": true
       }

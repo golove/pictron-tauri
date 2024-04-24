@@ -15,9 +15,10 @@ import IconDocumentation from './components/icons/IconDocumentation.vue'
 import type { Picture } from '@/types';
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from './stores/counter'
-
+import { ask, open } from '@tauri-apps/api/dialog';
 
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/api/notification';
+import { dialog } from '@tauri-apps/api'
 
 async function checkPermission() {
   let permissionGranted = await isPermissionGranted();
@@ -128,6 +129,14 @@ watch(() => store.cols, (n) => {
   console.log(n)
 })
 
+
+async function dialogEvent() {
+
+  const yes = await ask("选择保存文件夹", 'Tauri');
+  console.log(yes)
+
+}
+
 </script>
 
 <template>
@@ -167,6 +176,7 @@ watch(() => store.cols, (n) => {
     <div> <button @click="filterImages('star',4)">filter star 4 </button></div>
     <div> <button @click="filterImages('star',5)">filter star 5</button></div>
     <div> <button @click="checkPermission">获取权限</button></div>  
+    <div> <button @click="dialogEvent">弹窗</button></div>  
 
   </div>
   <main :style="{ width: mainWidth + 'px', left: sideWidth + 'px' }">

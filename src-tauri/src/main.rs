@@ -12,18 +12,28 @@ use objc::{class, msg_send, sel, sel_impl};
 
 use state::{AppState, ServiceAccess};
 // use chrono::Duration;
-use tauri::{api::dir, window, AppHandle, CustomMenuItem, Manager, Menu, MenuItem, Result, State, Submenu, Window};
+use tauri::{
+    api::dir, window, AppHandle, CustomMenuItem, Manager, Menu, MenuItem, Result, State, Submenu,
+    Window,
+};
 // tauri::api::file;
 
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 mod spider;
 use spider::Spider;
-use std::{fs::File, io::Write, time::Instant};
+use std::{
+    fs::File,
+    io::Write,
+    path::{self, PathBuf},
+    time::Instant,
+};
 
 use serde::{Deserialize, Serialize};
 
 mod database;
 mod state;
+
+// mod async_spider;
 
 // #[tauri::command]
 // async fn read_file(path: String) -> Result<String, String> {
@@ -55,6 +65,27 @@ struct SpiderResult {
     pictures: Vec<Picture>,
     duration: u64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PictronConfig {
+    folderpath: String,
+    pictureurl: String,
+}
+
+// #[tauri::command]
+//(window: Window,app_handle: AppHandle, url: String) -> u64 {
+//     let start_time = Instant::now();
+
+//         app_handle.db( |db|{
+//             async_spider::spider(&window,db,&url);
+//         });
+
+//     let end_time = Instant::now();
+//     // 计算执行时间
+//     let duration = (end_time - start_time).as_secs();
+
+//     duration
+// }
 
 #[tauri::command]
 fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
@@ -106,16 +137,72 @@ fn select_from_db(app_handle: AppHandle, sql: String) -> Vec<Picture> {
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
-  msg: u32,
+    msg: u32,
+}
+
+#[tauri::command]
+fn insert_config(app_handle: AppHandle, path: String) -> String {
+  
+    let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
+    app_handle.db(|db| {
+        let sql = format!("INSERT INTO pictron_config (folderpath, pictureurl) VALUES ('{}','{}')", &path,url);
+        match database::inset_config(db, &sql) {
+            Ok(_) => "ok".to_string(),
+            Err(e) => e.to_string(),
+        }
+    })
+}
+
+#[tauri::command]
+fn get_folder_path(app_handle: AppHandle) -> bool {
+    app_handle.db(|db| {
+        let sql = "SELECT folderpath FROM pictron_config WHERE id = 1";
+        match database::select_config(db, &sql) {
+            Ok(_) =>  true,
+            Err(e) => false,
+        }
+    })
+}
+
+fn home_dir(app_handle: AppHandle) -> PathBuf {
+    app_handle.db(|db| {
+        let sql = "SELECT folderpath FROM pictron_config WHERE id = 1";
+        match database::select_config(db, &sql) {
+            Ok(row) => {
+           
+                let path = path::Path::new(&row);
+                path.to_path_buf()
+            }
+            Err(e) => {
+                println!("select db error: {}", e);
+                let path = tauri::api::path::home_dir().unwrap().join("Downloads");
+                let dbpath =path.clone().to_str().unwrap().to_string();
+                let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
+                let sql = format!("INSERT INTO pictron_config (folderpath, pictureurl) VALUES ('{}','{}')", &dbpath,url);
+                match database::inset_config(db, &sql) {
+                    Ok(_) => println!("insert db success"),
+                    Err(e) => println!("insert db error: {}", e),
+
+                }
+                path
+            }
+        }
+    })
 }
 
 use tokio::spawn;
 
 // remember to call `.manage(MyState::default())`
 #[tauri::command]
-async fn download_img(window:Window, srcs: Vec<ImgDetail>, title: String,id:u32) {
+async fn download_img(
+    app_handle: AppHandle,
+    window: Window,
+    srcs: Vec<ImgDetail>,
+    title: String,
+    id: u32,
+) {
     // 选择下载目录
-    let home_dir = tauri::api::path::home_dir().unwrap().join("Downloads");
+    let home_dir = home_dir(app_handle);
     let download_dir = home_dir.join(&title);
     if !download_dir.exists() {
         match std::fs::create_dir(&download_dir) {
@@ -132,10 +219,10 @@ async fn download_img(window:Window, srcs: Vec<ImgDetail>, title: String,id:u32)
                     let file = File::create(&file_path).unwrap();
                     let handle = spawn(async move {
                         download(&url, file);
-                        let event_name = "download-success".to_string()+id.to_string().as_str();
-                        let _ = window_clone.emit(&event_name,Payload{msg:index_clone});
+                        let event_name = "download-success".to_string() + id.to_string().as_str();
+                        let _ = window_clone.emit(&event_name, Payload { msg: index_clone });
                     });
-                   
+
                     // handles.push(handle);
                     handle.await.unwrap();
                     index += 1;
@@ -149,7 +236,6 @@ async fn download_img(window:Window, srcs: Vec<ImgDetail>, title: String,id:u32)
                 //     res = format!("{},{}", res, result);
                 // }
 
-                
                 // format!("create dir success, download {} images", &index)
             }
 
@@ -159,11 +245,10 @@ async fn download_img(window:Window, srcs: Vec<ImgDetail>, title: String,id:u32)
             }
         }
     } else {
-        print!( "{} already exists", download_dir.to_str().unwrap());
+        print!("{} already exists", download_dir.to_str().unwrap());
         // format!("{} already exists", download_dir.to_str().unwrap())
     }
 }
-
 
 fn download(url: &str, mut file: File) -> String {
     match reqwest::blocking::get(url) {
@@ -174,9 +259,8 @@ fn download(url: &str, mut file: File) -> String {
             response.copy_to(&mut buffer).unwrap();
             file.write_all(&buffer).unwrap();
             // println!("download success");
-           
+
             format!("download success")
-            
         }
         Err(e) => {
             println!("download error: {}", e);
@@ -207,7 +291,9 @@ fn main() {
             spider_img,
             update_db,
             select_from_db,
-            download_img
+            download_img,
+            insert_config,
+            get_folder_path
         ])
         .setup(|app| {
             let handle = app.handle();
