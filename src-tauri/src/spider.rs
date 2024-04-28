@@ -6,13 +6,10 @@ use rayon::prelude::*;
 use reqwest::blocking;
 use rusqlite::Connection;
 use std::error::Error;
-
 use crate::ImgDetail;
 use crate::Picture;
 use scraper::{Html, Selector};
 use serde::Serialize;
-
-
 use crate::database;
 
 
@@ -120,104 +117,6 @@ impl Spider {
         Ok(body)
     }
 
-    // pub fn generate_test_data(db: &Connection) -> Result<Self, Box<dyn Error>> {
-    //     let pictures = [
-    //         Picture {
-    //             id: 78191923,
-    //             title: "XR tina 甜仔 太長今服飾 (64P)".to_owned(),
-    //             url: "http://dkleh8.xyz/pw/html_data/14/2404/7289780.html".to_owned(),
-    //             srcs: [
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u53655.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u53g3g.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u53mbw.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u53ytx.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u541da.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u5dss1.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u5dzna.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u5evj4.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u5ewl0.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u5f9ez.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303t.cc/i/2024/04/17/u5fcd9.jpg".to_owned(),
-    //                     aspect_ratio: 0.6675,
-    //                 },
-    //             ]
-    //             .to_vec(),
-    //             star: 0,
-    //             collect: false,
-    //             download: false,
-    //             deleted: false,
-    //         },
-    //         Picture {
-    //             id: 1111718,
-    //             title: "原史奈 - F.spot (85P)".to_owned(),
-    //             url: "http://dkleh8.xyz/pw/html_data/14/2404/7289781.html".to_owned(),
-    //             srcs: [
-    //                 ImgDetail {
-    //                     src: "https://pic2303r.link/i/2024/04/17/u8lgwz.jpg".to_owned(),
-    //                     aspect_ratio: 1.0,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303r.link/i/2024/04/17/u8m0f4.jpg".to_owned(),
-    //                     aspect_ratio: 0.729927,
-    //                 },
-    //                 ImgDetail {
-    //                     src: "https://pic2303r.link/i/2024/04/17/u8nxkh.jpg".to_owned(),
-    //                     aspect_ratio: 0.729927,
-    //                 },
-    //             ]
-    //             .to_vec(),
-    //             star: 0,
-    //             collect: false,
-    //             download: false,
-    //             deleted: false,
-    //         },
-    //     ]
-    //     .to_vec();
-
-    //     let cloned_pictures = pictures.clone();
-    //     for picture in pictures {
-    //         println!("Inserting picture: {}", &picture.id);
-    //         if let Err(err) = database::insert_picture(db, picture) {
-    //             eprintln!("Failed to insert picture: {}", err);
-    //             // Handle error here if needed
-    //         }
-    //     }
-
-    // Ok(Spider {
-    //         pictures: cloned_pictures as Vec<Picture>,
-    //     })
-    // }
 
     // 生成随机id
     pub fn new_id() -> u32 {
@@ -266,3 +165,7 @@ impl Spider {
         }
     }
 }
+
+
+
+

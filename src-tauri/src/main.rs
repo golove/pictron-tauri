@@ -21,6 +21,10 @@ use tauri::{
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 mod spider;
 use spider::Spider;
+
+// mod asyncSpider;
+// use asyncSpider::Spider as AsyncSpider;
+
 use std::{
     fs::File,
     io::Write,
@@ -32,6 +36,8 @@ use serde::{Deserialize, Serialize};
 
 mod database;
 mod state;
+
+
 
 // mod async_spider;
 
@@ -88,7 +94,7 @@ pub struct PictronConfig {
 // }
 
 #[tauri::command]
-fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
+async fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
     let start_time = Instant::now();
 
     // let db = Database::new().expect("Failed to create database");
