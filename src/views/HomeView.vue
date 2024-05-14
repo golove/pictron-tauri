@@ -46,7 +46,7 @@ function update(obj: { type: 'collect' | 'download' | 'deleted', id: number, val
   }
   if (obj.type === 'download' && obj.value) {
     let img = imgs.value.find(i => i.id === obj.id)
-    if (img) {
+    if (img !== undefine) {
       invoke("get_folder_path").then(async (res) => {
         console.log(res)
         if (res) {
