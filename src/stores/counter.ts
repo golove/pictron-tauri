@@ -75,6 +75,9 @@ export const useCounterStore = defineStore('counter', () => {
   function setPictureTitle(title: string) {
     pictureTitle.value = title
   }
+  function addPicture(picture:Picture){
+    pictures.value.push(picture)
+  }
 
   return {
     sideShowFlag,
@@ -94,6 +97,7 @@ export const useCounterStore = defineStore('counter', () => {
     setPictureTitle,
     setPictures,
     changePictures,
-    updatePictures
+    updatePictures,
+    addPicture
   }
 })

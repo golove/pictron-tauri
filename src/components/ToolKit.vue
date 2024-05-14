@@ -74,7 +74,7 @@ const props = defineProps({
 const emit = defineEmits(['update'])
 const fill = '#ddd'
 const actFill = '#f88'
-const downloadFlag = ref(false)
+const downloadFlag = ref(props.download)
 // const texts = ref([0, 0, 0])
 const flags = ref([props.like, props.download, props.deleted])
 
@@ -101,15 +101,16 @@ function click(type: string, n: number) {
             click('collect', 0)
         }
     }
+    if(n ===1 && !flags.value[n]){
+        downloadFlag.value = flags.value[n]
+    }
    
 }
 
 watch(()=>dCount.value, (newVal) => {
-   
-        if (newVal > props.length) {
+        if (newVal+1 > props.length) {
             downloadFlag.value = true
         }
-    
 })
 
 
@@ -121,8 +122,8 @@ watch(()=>dCount.value, (newVal) => {
             <!-- <div>{{ texts[0] }}</div> -->
         </div>
         <div class="toolkitItem" @click.stop="click('download', 1)">
-            <DownloadDone v-if="downloadFlag" :fill="flags[1] ? 'green' : fill" width='20px' height='20px' />
-            <downloadV v-else :fill="flags[1] ? actFill : fill" width='20px' height='20px' />
+            <DownloadDone v-if="downloadFlag" :fill="actFill"  width='20px' height='20px' />
+            <downloadV v-else :fill="fill" width='20px' height='20px' />
             <div>{{ downloadFlag ? '' : dCount ? dCount : '' }}</div>
         </div>
         <div class="toolkitItem" @click.stop="click('deleted', 2)">

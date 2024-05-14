@@ -24,3 +24,14 @@ export interface LoadedReturn {
 export type EventHandler = {
   emit: (eventName: string, eventData: any) => void
 }
+
+import type { Duration } from '@tauri-apps/api/http';
+export interface SpiderResult {
+  pictures: Picture[],
+  duration: Duration,
+}
+
+export interface SpiderPayload{
+  percentage:string,
+  picture:Picture
+}

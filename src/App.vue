@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { invoke } from '@tauri-apps/api/tauri'
+import { emit, listen } from "@tauri-apps/api/event";
 import { computed, ref, watch } from 'vue'
 import IconSupport from './components/icons/IconSupport.vue'
 import customizeTitlebar from './components/customizeTitlebar.vue'
@@ -12,13 +13,13 @@ import IconEcosystem from './components/icons/IconEcosystem.vue'
 import IconWindow from './components/icons/IconWindow.vue'
 import IconClose from './components/icons/IconClose.vue'
 import IconDocumentation from './components/icons/IconDocumentation.vue'
-import type { Picture } from '@/types';
+import type { Picture ,SpiderResult,SpiderPayload} from '@/types';
 import { storeToRefs } from 'pinia';
 import { useCounterStore } from './stores/counter'
 import { ask, open } from '@tauri-apps/api/dialog';
 
 import { isPermissionGranted, requestPermission, sendNotification } from '@tauri-apps/api/notification';
-import { dialog } from '@tauri-apps/api'
+
 
 async function checkPermission() {
   let permissionGranted = await isPermissionGranted();
@@ -55,7 +56,13 @@ if (store.pictures.length === 0) {
   invoke('select_from_db',{sql})
     // `invoke` 返回异步函数
     .then((response) => {
-      store.setPictures(response as Picture[])
+      let res = response as Picture[]
+      if(res.length>0){
+        store.setPictures(res)
+      }else{
+        getmoredata()
+      }
+      
     })
 }
 
@@ -137,6 +144,38 @@ async function dialogEvent() {
 
 }
 
+
+
+function getmoredata(){
+  let url =  "https://nicegirl.in/";
+  invoke('async_spider',{url})
+  .then(res=>{
+    let duration = res as {duration:number}
+    // store.setPictures(value.pictures)
+    console.log("从网络成功爬取图片用时："+duration.duration)
+    // console.log(value.pictures)
+    sendNotification({ title: 'Pictron', body: '从网络成功爬取图片' });
+  })
+}
+
+
+const progress = ref("0%")
+listen('spider-event',(event)=>{
+  let payload = event.payload as SpiderPayload
+  progress.value = payload.percentage
+    store.addPicture(payload.picture)
+})
+
+watch(()=>progress.value,(n)=>{
+  console.log(n)
+  if(n==="100.0%"){
+    let st = setTimeout(() => {
+        progress.value = "0%"
+        clearTimeout(st)
+      }, 300);
+    }
+})
+
 </script>
 
 <template>
@@ -177,6 +216,7 @@ async function dialogEvent() {
     <div> <button @click="filterImages('star',5)">filter star 5</button></div>
     <div> <button @click="checkPermission">获取权限</button></div>  
     <div> <button @click="dialogEvent">弹窗</button></div>  
+    <div><button @click="getmoredata">获取更多</button></div>
 
   </div>
   <main :style="{ width: mainWidth + 'px', left: sideWidth + 'px' }">
@@ -201,10 +241,12 @@ async function dialogEvent() {
             <!-- <IconDocumentation /> -->
           </i>
         </div>
+      
       </div>
-
+      <div class="progress"></div>
     </div>
     <div class="content">
+     
       <RouterView />
     </div>
 
@@ -336,8 +378,8 @@ main {
 .toolbarButton {
   user-select: none;
   position: absolute;
-  margin-left: 4px;
-  top: 2.5px;
+  
+  /* top: 2.5px; */
   width: v-bind(toolBarWidth);
   height: 100%;
   transition: all 0.3s ease;
@@ -346,7 +388,8 @@ main {
 .arrowButton {
   user-select: none;
   position: absolute;
-  top: 0;
+  top: 2.5px;
+  margin-left: 4px;
   align-items: center;
   display: flex;
   color: var(--color-text);
@@ -356,7 +399,7 @@ main {
 .scaleButton {
   user-select: none;
   position: absolute;
-  top: 0;
+  top: 2.5px;
   right: 20px;
   align-items: center;
   display: flex;
@@ -367,6 +410,7 @@ main {
   user-select: none;
   position: absolute;
   left: 80px;
+  top:2.5px;
 }
 
 .pictureTitle {
@@ -394,6 +438,14 @@ main {
   cursor: pointer;
 }
 
+.progress{
+  position: absolute;
+  bottom: 0px;
+  height: 2px;
+  width: v-bind(progress);
+  background-color: #f88;
+  transition: all 0.1s ease;
+}
 /* .content::-webkit-scrollbar-track {
   background-color: var(--color-background);
 } */

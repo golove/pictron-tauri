@@ -4,16 +4,13 @@ import { invoke } from '@tauri-apps/api/tauri'
 import pgk from '../../package.json'
 import { ref } from 'vue';
 import { useCounterStore } from '@/stores/counter'; 
-import type { Picture } from '@/types';
-import type { Duration } from '@tauri-apps/api/http';
+import type { Picture ,SpiderResult} from '@/types';
+
 import { sendNotification } from '@tauri-apps/api/notification';
 
 const store = useCounterStore();
 
-interface SpiderResult {
-    pictures: Picture[],
-    duration: Duration,
-}
+
 
 const data =ref()
 
@@ -26,7 +23,7 @@ function click() {
   invoke('spider_img', { url: url }).then((value) => {
     const res = value as SpiderResult
     // console.log(res)
-    store.setPictures(res.pictures as Picture[])
+    store.setPictures(res.pictures)
     sendNotification({ title: 'Pictron', body: '从网络成功爬取图片' });
     // data.value = res
   })

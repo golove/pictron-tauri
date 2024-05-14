@@ -79,8 +79,6 @@ function update(obj: { type: 'collect' | 'download' | 'deleted', id: number, val
                 invoke('download_img', { srcs: img.srcs, title: img.title, id: img.id }).then(res => {
                   console.log(res)
                 })
-
-
               }
             });
           } else {
@@ -127,6 +125,7 @@ let dcount = (id: number) => {
   if (eventListenerList.value.length === 0) return 0
   let items = eventListenerList.value.filter(item => item.id === id)
   if (items.length === 0) return 0
+  console.log(items[0].count)
   return items[0].count
 
 }

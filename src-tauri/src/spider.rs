@@ -6,6 +6,7 @@ use rayon::prelude::*;
 use reqwest::blocking;
 use rusqlite::Connection;
 use std::error::Error;
+use crate::database::Database;
 use crate::ImgDetail;
 use crate::Picture;
 use scraper::{Html, Selector};
@@ -24,7 +25,7 @@ pub struct Spider {
 }
 
 impl Spider {
-    pub fn new(db: &Connection, url: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(db:Database, url: &str) -> Result<Self, Box<dyn Error>> {
         match Self::get_web_content(url) {
             Ok(body) => {
                 let pages_info = Self::parse_page(&body);
@@ -39,7 +40,7 @@ impl Spider {
                 // 批量插入图片数据
                 for picture in pictures {
                     println!("Inserting picture: {}", &picture.id);
-                    if let Err(err) = database::insert_picture(db, picture) {
+                    if let Err(err) = db.insert_picture(picture) {
                         eprintln!("Failed to insert picture: {}", err);
                         // Handle error here if needed
                     }

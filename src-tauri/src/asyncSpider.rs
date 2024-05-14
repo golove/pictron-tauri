@@ -1,150 +1,203 @@
+use reqwest::Error;
+use scraper::{Html, Selector};
+
+use crate::database::{self, Database};
 use crate::{ImgDetail, Picture};
 use chrono::Local;
-use futures::future::try_join_all;
-use image::io::Reader as ImageReader;
-use image::GenericImageView;
 use rand::{thread_rng, Rng};
-use reqwest::Client;
 use rusqlite::Connection;
-use scraper::{Html, Selector};
-use serde::Serialize;
-use std::error::Error;
-use tokio::task;
+use tauri::Window;
 
-#[derive(Debug, Serialize)]
-struct PageInfo {
-    title: String,
-    href: String,
+#[derive(Clone, serde::Serialize)]
+struct Payload {
+    percentage: String,
+    picture: Picture,
 }
 
-// 假设 ImgDetail 和 Picture 已经被定义
-
-#[derive(Debug, Serialize)]
-pub struct Spider {
-    pictures: Vec<Picture>,
-}
-
-impl Spider {
-    // 注意 new 函数现在是异步的
-    pub async fn new(db: &Connection, url: &str) -> Result<Self, Box<dyn Error>> {
-        let body = Self::get_web_content(url).await?;
-
-        let pages_info = Self::parse_page(&body);
-
-        // 以并发方式获取图片数据
-        let futures = pages_info
-            .into_iter()
-            .map(|page_info| Self::fetch_picture_data(&page_info));
-
-        let pictures: Vec<_> = try_join_all(futures).await?.into_iter().collect();
-
-        // 批量插入图片数据（此处略过具体实现）
-
-        Ok(Spider { pictures })
-    }
-
-    async fn get_web_content(url: &str) -> Result<String, Box<dyn Error>> {
-        let client = reqwest::Client::new();
-        let response = client.get(url).send().await?;
-        Ok(response.text().await?)
-    }
-
-    async fn fetch_picture_data(page_info: &PageInfo) -> Result<Picture, Box<dyn Error>> {
-        // 异步获取 Web 内容
-        let img_body = Self::get_web_content(&page_info.href).await?;
-        let srcs = Self::parse_picture(&img_body).await?;
-        // 生成图片信息
-        let id = Self::new_id();
-
-        Ok(Picture {
-            id,
-            title: page_info.title.clone(),
-            url: page_info.href.clone(),
-            srcs,
-            star: 0,
-            collect: false,
-            download: false,
-            deleted: false,
-        })
-    }
-
-    // 解析图片详情，修改为异步函数
-    async fn parse_picture(body: &str) -> Result<Vec<ImgDetail>, Box<dyn Error>> {
-        // 解析 HTML，获取图片 URL，然后调用异步函数 fetch_image_dimensions 获取尺寸
-        let document = Html::parse_document(body);
-        let selector = Selector::parse("div.f14 img").expect("Failed to parse selector");
-        let mut img_details = Vec::new();
-        let client = blocking::Client::new();
-        document.select(&selector).into_iter().for_each(|element| {
-            if let Some(src) = element.value().attr("src") {
-                match Self::get_image_dimensions(&client, src).await {
-                    Ok(ratio) => {
-                        let img_detail = ImgDetail {
-                            src: src.to_string(),
-                            aspect_ratio: ratio,
+pub async fn get_pictures(db: Database, window: Window, url: String) -> Result<(), Error> {
+    let selector = Selector::parse("a.link-muted").expect("Failed to parse selector");
+    let spider = Spider::new(url, selector);
+    let hrefs = spider.get_page_info().await;
+    // let mut pictures = Vec::new();
+    let mut index = 0;
+    match hrefs {
+        Ok(hrefs) => {
+            let len = hrefs.len();
+            for href in hrefs {
+                // if index == 5 {break}
+                let src = href.get_img_src().await;
+                match src {
+                    Ok(vec) => {
+                        let picture = Picture {
+                            id: new_id(),
+                            title: href.title,
+                            url: href.href,
+                            srcs: vec,
+                            star: 0,
+                            collect: false,
+                            download: false,
+                            deleted: false,
                         };
-                        img_details.push(img_detail);
+                        index += 1;
+                        let pic_clone = picture.clone();
+                        if let Err(err) = db.insert_picture(pic_clone) {
+                            eprintln!("Failed to insert picture: {}", err);
+                            // Handle error here if needed
+                        }
+                        // pictures.push(picture);
+                        let percentage = format!("{:.1}%", (index as f64 / len as f64) * 100.0);
+                        window
+                            .emit(
+                                "spider-event",
+                                Payload {
+                                    percentage,
+                                    picture,
+                                },
+                            )
+                            .unwrap();
                     }
                     Err(e) => {
-                        let img_detail = ImgDetail {
-                            src: src.to_string(),
-                            aspect_ratio: 1.0,
-                        };
-                        img_details.push(img_detail);
-                        eprintln!("Failed to get image dimensions: {}", e);
+                        println!("{}", e);
                     }
                 }
             }
-        });
-        Ok(img_details)
+        }
+        Err(e) => {
+            println!("{}", e)
+        }
+    }
+    Ok(())
+}
+
+#[derive(Debug)]
+pub struct Spider {
+    pub url: String,
+    pub selector: Selector,
+}
+impl Spider {
+    pub fn new(url: String, selector: Selector) -> Self {
+        Spider { url, selector }
     }
 
-    // 异步获取图片尺寸
-    async fn fetch_image_dimensions(
-        client: &Client,
-        src: &str,
-    ) -> Result<f32, Box<dyn Error>> {
-        let res = client.get(src).send().await?;
-       if let Ok(bytes) = res.bytes().await {
-        let img = ImageReader::new(std::io::Cursor::new(bytes))
-            .with_guessed_format()?
-            .decode()?;
-        // 返回宽高
-        let (width, height) = img.dimensions();
-        Ok((width as f32) / (height as f32))
-       }esle{
-        eprintln!("Failed to get image content for URL: {}", src);
-        Ok(0.0)
-       }
-        
+    pub async fn get_page_content(&self) -> Result<Html, Error> {
+        // print!(" get page content running {} ",self.url);
+        let client = reqwest::Client::new();
+        match client.get(&self.url).send().await {
+            Ok(response) => {
+                let body = response.text().await?;
+                let html = Html::parse_fragment(&body);
+                Ok(html)
+            }
+            Err(e) => Err(e),
+        }
     }
-    // 其他方法定义省略..
 
-    // 解析页面，获取页面标题和链接
-    fn parse_page(body: &str) -> Vec<PageInfo> {
-        let document = Html::parse_document(body);
-        let selector =
-            Selector::parse("tr:nth-of-type(n+8) h3 a").expect("Failed to parse selector");
-        let mut pages_info = Vec::new();
-        for element in document.select(&selector) {
-            let title = element.inner_html();
-            if let Some(href) = element.value().attr("href") {
-                let page_info: PageInfo = PageInfo {
-                    title: title.to_string(),
-                    href: "http://dkleh8.xyz/pw/".to_string() + href,
-                };
-                pages_info.push(page_info);
+    pub async fn get_page_info(&self) -> Result<Vec<SpiderPageInfo>, Error> {
+        let html = self.get_page_content().await;
+        match html {
+            Ok(html) => {
+                let select = html.select(&self.selector);
+                println!("{:?}", &self.selector);
+                let mut page_info: Vec<SpiderPageInfo> = Vec::new();
+                for info in select {
+                    let selector = Selector::parse("p img").expect("Failed to parse selector");
+                    // let info_clone = info.clone();
+                    // let title = info_clone.value().attr("alt").unwrap_or("don't find name").to_string();
+                    if let Some(href) = info.value().attr("href") {
+                        // 使用空格 ' ' 或逗号 ',' 或句号 '.' 作为分隔符拆分字符串
+                        let parts: Vec<&str> = href.split(|c: char| c == '/' || c == '.').collect();
+
+                        // 遍历拆分后的部分并打印出来
+                        let title = parts.get(1).unwrap().to_string();;
+
+                        let url = "https://nicegirl.in".to_string() + href;
+                        let spider = Spider::new(url, selector);
+                        page_info.push(SpiderPageInfo::new(title, self.url.clone(), spider));
+                    }
+                }
+                Ok(page_info)
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                Err(e)
             }
         }
-        pages_info
+    }
+}
+
+#[derive(Debug)]
+pub struct SpiderPageInfo {
+    title: String,
+    href: String,
+    spider: Spider,
+}
+impl SpiderPageInfo {
+    fn new(title: String, href: String, spider: Spider) -> Self {
+        Self {
+            title,
+            href,
+            spider,
+        }
     }
 
-    // 生成随机id
-    pub fn new_id() -> u32 {
-        let now = Local::now();
-        let timestamp = now.timestamp() as u32;
-        let random_number: u32 = thread_rng().gen();
-        let unique_id = timestamp.wrapping_add(random_number);
-        unique_id
+    pub async fn get_img_src(&self) -> Result<Vec<ImgDetail>, Error> {
+        // print!("get img src running");
+        let html = self.spider.get_page_content().await;
+        match html {
+            Ok(html) => {
+                // println!("{:?}",body);
+                let mut srcs = vec![];
+                let select = html.select(&self.spider.selector);
+                for el in select {
+                    if let Some(src) = el.value().attr("src") {
+                        let url = src.to_string();
+                        let img_detail = from_url_split_number(url);
+                        srcs.push(img_detail);
+                    }
+                }
+                Ok(srcs)
+            }
+            Err(e) => Err(e),
+        }
     }
+}
+
+fn from_url_split_number(url: String) -> ImgDetail {
+    if let Some(start) = url.rfind('/') {
+        if let Some(end) = url.rfind('.') {
+            let dimensions_part: &str = &url[(start + 1)..end];
+            let dimensions: Vec<&str> = dimensions_part
+                .split('_')
+                .last()
+                .unwrap()
+                .split('x')
+                .collect();
+            let width: f32 = dimensions[0].parse().unwrap_or(0.0);
+            let height: f32 = dimensions[1].parse().unwrap_or(0.0);
+            let aspect_ratio = width / height;
+
+            ImgDetail {
+                src: url,
+                aspect_ratio,
+            }
+        } else {
+            ImgDetail {
+                src: url,
+                aspect_ratio: 0.0,
+            }
+        }
+    } else {
+        ImgDetail {
+            src: url,
+            aspect_ratio: 0.0,
+        }
+    }
+}
+
+fn new_id() -> u32 {
+    let now = Local::now();
+    let timestamp = now.timestamp() as u32;
+    let random_number: u32 = thread_rng().gen();
+    let unique_id = timestamp.wrapping_add(random_number);
+    unique_id
 }

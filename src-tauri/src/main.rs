@@ -22,22 +22,20 @@ use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
 mod spider;
 use spider::Spider;
 
-// mod asyncSpider;
-// use asyncSpider::Spider as AsyncSpider;
+mod asyncSpider;
+use scraper::Selector;
 
 use std::{
     fs::File,
     io::Write,
     path::{self, PathBuf},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use serde::{Deserialize, Serialize};
 
 mod database;
 mod state;
-
-
 
 // mod async_spider;
 
@@ -92,16 +90,52 @@ pub struct PictronConfig {
 
 //     duration
 // }
+#[tauri::command]
+async fn async_spider(app_handle: AppHandle, window: Window, url: String) -> u64 {
+    let start_time = Instant::now();
+    let db = database::Database::new(&app_handle);
+
+    match asyncSpider::get_pictures(db, window, url).await {
+        Ok(_) => {
+            let end_time = Instant::now();
+            let duration = (end_time - start_time).as_secs();
+            duration
+        }
+        Err(e) => {
+            let end_time = Instant::now();
+            println!("spider error: {}", e);
+            let duration = (end_time - start_time).as_secs();
+            duration
+        }
+    }
+}
+// match asyncSpider::get_pictures(window,url).await{
+//     Ok(_)=>{
+//         let end_time = Instant::now();
+//         // 计算执行时间
+//         let duration = (end_time - start_time).as_secs();
+//         duration
+//     }
+//     Err(e)=>{
+//         println!("spider error: {}", e);
+//         let end_time = Instant::now();
+//         // 计算执行时间
+//         let duration = (end_time - start_time).as_secs();
+//         duration
+//     }
+// }
+
+// }
 
 #[tauri::command]
-async fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
+fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
     let start_time = Instant::now();
 
-    // let db = Database::new().expect("Failed to create database");
+    let db = database::Database::new(&app_handle);
 
-    // let spider = Spider::generate_test_data();
+    
 
-    match app_handle.db(|db| Spider::new(db, &url)) {
+    match Spider::new(db, &url) {
         // match app_handle.db(|db| Spider::generate_test_data(db)) {
         Ok(s) => {
             let pictures = Spider::get_pictures(s);
@@ -124,15 +158,17 @@ async fn spider_img(app_handle: AppHandle, url: String) -> SpiderResult {
 
 #[tauri::command]
 fn update_db(app_handle: AppHandle, id: i64, sql: String) {
-    print!("{}", sql);
-    match app_handle.db(|db| database::update_picture(db, &sql)) {
+    // print!("{}", sql);
+    let db = database::Database::new(&app_handle);
+    match db.update_picture(&sql) {
         Ok(_) => println!("update db success id{}", id),
         Err(e) => println!("update db error: {}", e),
     }
 }
 #[tauri::command]
 fn select_from_db(app_handle: AppHandle, sql: String) -> Vec<Picture> {
-    match app_handle.db(|db| database::select_picture(db, &sql)) {
+    let db = database::Database::new(&app_handle);
+    match db.select_picture(&sql) {
         Ok(pictures) => pictures,
         Err(e) => {
             println!("select db error: {}", e);
@@ -148,57 +184,74 @@ struct Payload {
 
 #[tauri::command]
 fn insert_config(app_handle: AppHandle, path: String) -> String {
-  
     let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
-    app_handle.db(|db| {
-        let sql = format!("INSERT INTO pictron_config (folderpath, pictureurl) VALUES ('{}','{}')", &path,url);
-        match database::inset_config(db, &sql) {
-            Ok(_) => "ok".to_string(),
-            Err(e) => e.to_string(),
-        }
-    })
+    let db = database::Database::new(&app_handle);
+
+    let sql = format!(
+        "INSERT INTO pictron_config (folderpath, pictureurl) VALUES ('{}','{}')",
+        &path, url
+    );
+    match db.inset_config(&sql) {
+        Ok(_) => "ok".to_string(),
+        Err(e) => e.to_string(),
+    }
 }
 
 #[tauri::command]
 fn get_folder_path(app_handle: AppHandle) -> bool {
-    app_handle.db(|db| {
+    let db = database::Database::new(&app_handle);
+ 
         let sql = "SELECT folderpath FROM pictron_config WHERE id = 1";
-        match database::select_config(db, &sql) {
-            Ok(_) =>  true,
+        match db.select_config( &sql) {
+            Ok(_) => true,
             Err(e) => false,
         }
-    })
+
 }
 
 fn home_dir(app_handle: AppHandle) -> PathBuf {
-    app_handle.db(|db| {
-        let sql = "SELECT folderpath FROM pictron_config WHERE id = 1";
-        match database::select_config(db, &sql) {
-            Ok(row) => {
-           
-                let path = path::Path::new(&row);
-                path.to_path_buf()
-            }
-            Err(e) => {
-                println!("select db error: {}", e);
-                let path = tauri::api::path::home_dir().unwrap().join("Downloads");
-                let dbpath =path.clone().to_str().unwrap().to_string();
-                let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
-                let sql = format!("INSERT INTO pictron_config (folderpath, pictureurl) VALUES ('{}','{}')", &dbpath,url);
-                match database::inset_config(db, &sql) {
-                    Ok(_) => println!("insert db success"),
-                    Err(e) => println!("insert db error: {}", e),
-
-                }
-                path
-            }
+    let db = database::Database::new(&app_handle);
+    let sql = "SELECT folderpath FROM pictron_config WHERE id = 1";
+    match db.select_config(&sql) {
+        Ok(row) => {
+            let path = path::Path::new(&row);
+            path.to_path_buf()
         }
-    })
+        Err(e) => {
+            println!("select db error: {}", e);
+            let path = tauri::api::path::home_dir().unwrap().join("Downloads");
+            let dbpath = path.clone().to_str().unwrap().to_string();
+            let url = "http://dkleh8.xyz/pw/thread.php?fid=14";
+            let sql = format!(
+                "INSERT INTO pictron_config (folderpath, pictureurl) VALUES ('{}','{}')",
+                &dbpath, url
+            );
+            match db.inset_config(&sql) {
+                Ok(_) => println!("insert db success"),
+                Err(e) => println!("insert db error: {}", e),
+            }
+            path
+        }
+    }
 }
 
 use tokio::spawn;
 
-// remember to call `.manage(MyState::default())`
+#[tauri::command]
+async fn download_method(window:Window,srcs:Vec<ImgDetail>,title: String,id:u32){
+   let mut index = 1;
+    for src in srcs{
+        let index_clone = index;
+        let window_clone = window.clone();
+       // 模拟等待300ms
+      std::thread::sleep(Duration::from_millis(300));
+     
+       let event_name = "download-success".to_string() + id.to_string().as_str();
+       let _ = window_clone.emit(&event_name, Payload { msg: index_clone });
+        index += 1;
+    }
+}
+
 #[tauri::command]
 async fn download_img(
     app_handle: AppHandle,
@@ -229,20 +282,10 @@ async fn download_img(
                         let _ = window_clone.emit(&event_name, Payload { msg: index_clone });
                     });
 
-                    // handles.push(handle);
                     handle.await.unwrap();
                     index += 1;
                 }
-                // // 等待所有下载完成
-                // let mut res = "download success".to_string();
-                // for handle in handles {
-                //     let result = handle.join().unwrap();
-                //     let _ = window.emit("download-success",Payload{msg:index});
-                //     index += 1;
-                //     res = format!("{},{}", res, result);
-                // }
-
-                // format!("create dir success, download {} images", &index)
+              
             }
 
             Err(e) => {
@@ -299,15 +342,17 @@ fn main() {
             select_from_db,
             download_img,
             insert_config,
-            get_folder_path
+            get_folder_path,
+            async_spider,
+            download_method
         ])
         .setup(|app| {
-            let handle = app.handle();
+            // let handle = app.handle();
 
-            let app_state: tauri::State<AppState> = handle.state();
-            let db =
-                database::initialize_database(&handle).expect("Database initialize should succeed");
-            *app_state.db.lock().unwrap() = Some(db);
+            // let app_state: tauri::State<AppState> = handle.state();
+            // let mut db =
+            //     database::initialize_database(&handle).expect("Database initialize should succeed");
+            // *app_state.db.lock().unwrap() = Some(db);
 
             // 根据label获取窗口实例
             let main_window = app.get_window("main").unwrap();
